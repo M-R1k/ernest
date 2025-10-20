@@ -244,7 +244,7 @@ export default function ErnestVoiceChat() {
     <section className={`flex h-dvh w-screen flex-col ${fontSizeClass}`}>
       <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-950">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Assistant Ernest</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Ernest</h1>
           <span
             className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ring-1 ring-inset
               ${recording ? 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900' :
