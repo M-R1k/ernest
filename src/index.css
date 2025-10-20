@@ -3,3 +3,92 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Animations pour l'overlay Mode Voix */
+@keyframes voiceOverlayIn {
+  0% { opacity: 0; transform: translateY(24px) scale(0.98); filter: blur(12px); }
+  60% { opacity: 1; transform: translateY(6px) scale(1); filter: blur(2px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes voiceOverlayBgIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes micPopIn {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.voice-overlay-enter { animation: voiceOverlayIn 420ms cubic-bezier(.2,.8,.2,1) both; }
+.voice-overlay-bg { animation: voiceOverlayBgIn 600ms ease-out both; }
+.mic-pop { animation: micPopIn 420ms cubic-bezier(.2,.8,.2,1) 120ms both; }
+
+/* Anneaux tournants autour d'Ernest */
+@keyframes spin360 {
+  to { transform: rotate(360deg); }
+}
+
+.voice-arc-spin { animation: spin360 12s linear infinite; }
+
+.voice-arc {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  /* crée un anneau (trou au centre) */
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 8px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 8px));
+  will-change: transform;
+  animation: spin360 12s linear infinite;
+  filter: blur(.6px);
+}
+
+.voice-arc-1 {
+  /* Arc ~20%: première moitié en dégradé vers l'opaque, seconde moitié opaque */
+  background: conic-gradient(
+    from 330deg,
+    transparent 0 70%,
+    rgba(255,255,255,0) 70%,
+    rgba(255,255,255,.3) 74%,
+    rgba(255,255,255,.6) 77%,
+    rgba(255,255,255,.85) 80%,
+    rgba(255,255,255,.95) 80% 90%,
+    transparent 90% 100%
+  );
+  animation-duration: 12s;
+  animation-delay: 0ms;
+}
+
+.voice-arc-2 {
+  /* Arc ~20%: gradient d'entrée puis opaque */
+  background: conic-gradient(
+    from 90deg,
+    transparent 0 70%,
+    rgba(255,255,255,0) 70%,
+    rgba(255,255,255,.3) 74%,
+    rgba(255,255,255,.6) 77%,
+    rgba(255,255,255,.85) 80%,
+    rgba(255,255,255,.95) 80% 90%,
+    transparent 90% 100%
+  );
+  animation-duration: 12s;
+  animation-delay: 300ms;
+}
+
+.voice-arc-3 {
+  /* Arc ~20%: gradient d'entrée puis opaque */
+  background: conic-gradient(
+    from 210deg,
+    transparent 0 72%,
+    rgba(255,255,255,0) 72%,
+    rgba(255,255,255,.3) 76%,
+    rgba(255,255,255,.6) 79%,
+    rgba(255,255,255,.85) 82%,
+    rgba(255,255,255,.95) 82% 92%,
+    transparent 92% 100%
+  );
+  animation-duration: 12s;
+  animation-delay: 600ms;
+}

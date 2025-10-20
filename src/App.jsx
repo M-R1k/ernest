@@ -1,4 +1,4 @@
-import ErnestVoiceChat from './ErnestVoiceChat.jsx'
+import ErnestWidget from './index'
 
 export default function App() {
   return (
@@ -13,7 +13,7 @@ export default function App() {
       <main id="contenu" className="flex h-full w-full flex-col">
         <div className="rounded-2xl border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-950">
           
-          <ErnestVoiceChat />
+          <ErnestWidget webhookUrl="https://clic-et-moi.app.n8n.cloud/webhook-test/ernest/voice" />
         </div>
       </main>
     </div>
