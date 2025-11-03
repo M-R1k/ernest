@@ -199,10 +199,10 @@ function LargeButton({ icon, label, onClick, ariaLabel }: { icon: string; label:
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-300 bg-white p-5 text-center text-[18px] font-semibold shadow-sm transition hover:border-blue-500 hover:shadow focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 min-h-[88px]"
+      className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-300 bg-white p-5 text-center text-[18px] md:text-[20px] font-semibold shadow-sm transition hover:border-blue-500 hover:shadow focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 min-h-[88px] md:min-h-[100px]"
       aria-label={ariaLabel}
     >
-      <span className="text-3xl" aria-hidden>
+      <span className="text-3xl md:text-4xl" aria-hidden>
         {icon}
       </span>
       <span>{label}</span>
@@ -221,7 +221,7 @@ function Bubble({
 
   return (
     <div
-      className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 shadow-sm ring-1 ring-inset ${
+      className={`max-w-[85%] md:max-w-[75%] whitespace-pre-wrap rounded-2xl px-4 md:px-5 py-3 md:py-4 shadow-sm ring-1 ring-inset ${
         isUser
           ? "ml-auto bg-blue-600 text-white ring-blue-500"
           : "mr-auto bg-gray-100 text-gray-900 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700"
@@ -253,13 +253,13 @@ function Bubble({
 
 function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choice[]; onSelect: (value: string) => void }) {
   return (
-    <div role="group" aria-label={`Choix étape ${step}`} className="flex flex-wrap gap-3">
+    <div role="group" aria-label={`Choix étape ${step}`} className="flex flex-wrap gap-3 md:gap-4">
       {choices.map((c) => (
         <button
           key={c.value}
           type="button"
           onClick={() => onSelect(c.value)}
-          className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-white px-4 py-3 text-[18px] font-medium ring-1 ring-inset ring-gray-300 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+          className="inline-flex min-h-[48px] md:min-h-[52px] items-center justify-center rounded-xl bg-white px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-medium ring-1 ring-inset ring-gray-300 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
           aria-label={c.label}
         >
           {c.label}
@@ -268,10 +268,10 @@ function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choic
       <button
         type="button"
         onClick={() => onSelect("fallback")}
-        className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-white px-4 py-3 text-[18px] font-medium ring-1 ring-inset ring-gray-300 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
-        aria-label="Je n’y arrive pas"
+        className="inline-flex min-h-[48px] md:min-h-[52px] items-center justify-center rounded-xl bg-white px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-medium ring-1 ring-inset ring-gray-300 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+        aria-label="Je n'y arrive pas"
       >
-        Je n’y arrive pas
+        Je n'y arrive pas
       </button>
     </div>
   );
@@ -279,33 +279,33 @@ function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choic
 
 function TopBar({ onBack, onMenu, onReset }: { onBack: () => void; onMenu: () => void; onReset: () => void }) {
   return (
-    <header className="flex items-center justify-between px-4 py-3">
+    <header className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
       <button
         type="button"
         onClick={onBack}
-        className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+        className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
         aria-label="Retour"
       >
-        <span aria-hidden>←</span>
+        <span aria-hidden className="text-lg md:text-xl">←</span>
       </button>
-      <div className="text-[16px] font-semibold text-gray-900">Ernest</div>
-      <div className="flex items-center gap-2">
+      <div className="text-[16px] md:text-[18px] font-semibold text-gray-900">Ernest</div>
+      <div className="flex items-center gap-2 md:gap-3">
         <button
           type="button"
           onClick={onReset}
-          className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+          className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
           aria-label="Effacer la conversation"
           title="Effacer la conversation"
         >
-          <span aria-hidden>🗑️</span>
+          <span aria-hidden className="text-base md:text-lg">🗑️</span>
         </button>
         <button
           type="button"
           onClick={onMenu}
-          className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+          className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
           aria-label="Menu"
         >
-          <span aria-hidden>≡</span>
+          <span aria-hidden className="text-lg md:text-xl">≡</span>
         </button>
       </div>
     </header>
@@ -314,21 +314,21 @@ function TopBar({ onBack, onMenu, onReset }: { onBack: () => void; onMenu: () =>
 
 function StickyBar({ onBack, onHome, onContact, onReminder }: { onBack: () => void; onHome: () => void; onContact: () => void; onReminder: () => void }) {
   return (
-    <div className="sticky bottom-0 z-10 w-full border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-950/95">
-      <div className="mx-auto flex max-w-screen-lg items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={onBack} className="min-h-[48px] rounded-xl bg-gray-100 px-4 py-3 text-[18px] font-semibold shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300">
+    <div className="sticky bottom-0 z-10 w-full border-t border-gray-200 bg-white/95 px-4 md:px-6 py-3 md:py-4 backdrop-blur dark:border-gray-800 dark:bg-gray-950/95">
+      <div className="mx-auto flex max-w-screen-lg items-center justify-between gap-2 md:gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
+          <button type="button" onClick={onBack} className="min-h-[48px] md:min-h-[52px] rounded-xl bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300">
             ↩️ Retour
           </button>
-          <button type="button" onClick={onHome} className="min-h-[48px] rounded-xl bg-gray-100 px-4 py-3 text-[18px] font-semibold shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300">
+          <button type="button" onClick={onHome} className="min-h-[48px] md:min-h-[52px] rounded-xl bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300">
             🏠 Menu
           </button>
         </div>
-        <div className="flex items-center gap-2">
-          <a href="tel:3018" onClick={onContact} className="min-h-[48px] rounded-xl bg-green-600 px-4 py-3 text-[18px] font-semibold text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-300">
+        <div className="flex items-center gap-2 md:gap-3">
+          <a href="tel:3018" onClick={onContact} className="min-h-[48px] md:min-h-[52px] rounded-xl bg-green-600 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-300">
             📞 Contact
           </a>
-          <button type="button" onClick={onReminder} className="min-h-[48px] rounded-xl bg-amber-100 px-4 py-3 text-[18px] font-semibold shadow-sm transition hover:bg-amber-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300">
+          <button type="button" onClick={onReminder} className="min-h-[48px] md:min-h-[52px] rounded-xl bg-amber-100 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold shadow-sm transition hover:bg-amber-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300">
             🔔 Rappel
           </button>
         </div>
@@ -382,8 +382,8 @@ function Composer({
   meterLevel,
 }: ComposerProps) {
   return (
-    <div className="w-full px-4 py-3">
-      <div className="mx-auto flex w-full max-w-screen-sm items-center gap-3 rounded-full bg-gray-100 px-4 py-3 text-gray-700">
+    <div className="w-full px-4 md:px-6 py-3 md:py-4">
+      <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md items-center gap-3 md:gap-4 rounded-full bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-gray-700">
         {listening ? (
           <div
             className="flex-1 inline-flex items-center gap-3 rounded-lg bg-white/70 px-3 py-2 ring-1 ring-inset ring-gray-300 text-gray-700 min-w-0"
@@ -428,25 +428,25 @@ function Composer({
             }}
             placeholder="Posez votre question"
             aria-label="Posez votre question"
-            className="flex-1 bg-transparent text-[16px] outline-none placeholder:text-gray-500"
+            className="flex-1 bg-transparent text-[16px] md:text-[18px] outline-none placeholder:text-gray-500"
           />
         )}
         <button
           type="button"
           onClick={onMic}
-          className={`grid h-9 w-9 flex-shrink-0 place-items-center rounded-full text-gray-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 ${listening ? "animate-pulse text-red-600" : ""}`}
+          className={`grid h-9 w-9 md:h-10 md:w-10 flex-shrink-0 place-items-center rounded-full text-gray-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 ${listening ? "animate-pulse text-red-600" : ""}`}
           aria-label={listening ? "Arrêter la dictée" : "Démarrer la dictée"}
           title={listening ? "Écoute en cours…" : "Dicter un message"}
         >
-          <MicIcon className="h-8 w-8" />
+          <MicIcon className="h-8 w-8 md:h-9 md:w-9" />
         </button>
         <button
           type="button"
           onClick={onVoice}
-          className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50"
+          className="grid h-12 w-12 md:h-14 md:w-14 flex-shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50"
           aria-label="Mode Voix"
         >
-          <SendWavesIcon className="h-8 w-8" />
+          <SendWavesIcon className="h-8 w-8 md:h-9 md:w-9" />
         </button>
       </div>
     </div>
@@ -853,7 +853,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
   }
 
   return (
-    <section ref={containerRef} className="flex h-dvh w-full flex-col bg-white text-[18px]">
+    <section ref={containerRef} className="flex h-full min-h-full w-full flex-col bg-white text-[18px] md:text-[19px] overflow-hidden">
       <TopBar
         onBack={handleBack}
         onMenu={() => { /* menu plus tard */ }}
@@ -874,24 +874,24 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       {false && screen === "sos" && <div />}
 
       {/* Conversation area - toujours visible */}
-      <div className="flex flex-1 flex-col gap-4 px-4 py-2">
+      <div className="flex flex-1 flex-col gap-4 md:gap-5 px-4 md:px-6 py-2 md:py-3 overflow-y-auto min-h-0">
           {/* Message central d'accueil */}
           {conversation.length === 0 && (
             <div className="grid w-full flex-1 place-items-center">
-              <div className="mx-auto max-w-screen-sm rounded-2xl bg-white px-4 py-3 text-center text-gray-700 shadow-sm ring-1 ring-inset ring-gray-200">
+              <div className="mx-auto max-w-screen-sm md:max-w-screen-md rounded-2xl bg-white px-4 md:px-6 py-3 md:py-4 text-center text-gray-700 text-[16px] md:text-[18px] shadow-sm ring-1 ring-inset ring-gray-200">
                 Sélectionnez un thème ou tapez directement pour commencer.
               </div>
             </div>
           )}
           {/* Safety banner */}
           {showBannerUrl && (
-            <div className="mx-auto w-full max-w-screen-sm rounded-xl bg-amber-50 p-4 text-amber-900 ring-1 ring-inset ring-amber-200">
-              <div className="mb-2 font-semibold">Pour votre sécurité, utilisez les canaux officiels.</div>
+            <div className="mx-auto w-full max-w-screen-sm md:max-w-screen-md rounded-xl bg-amber-50 p-4 md:p-5 text-amber-900 ring-1 ring-inset ring-amber-200">
+              <div className="mb-2 md:mb-3 font-semibold text-[16px] md:text-[18px]">Pour votre sécurité, utilisez les canaux officiels.</div>
               <a
                 href={showBannerUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-amber-600 px-4 py-2 text-white hover:bg-amber-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
+                className="inline-flex min-h-[44px] md:min-h-[48px] items-center justify-center rounded-lg bg-amber-600 px-4 md:px-5 py-2 md:py-2.5 text-[16px] md:text-[18px] text-white hover:bg-amber-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
               >
                 Ouvrir le site officiel
               </a>
@@ -899,28 +899,28 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           )}
 
           {(currentSteps?.[stepIndex]) && (
-            <div className="mx-auto flex w-full max-w-screen-sm flex-col gap-3">
+            <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md flex-col gap-3 md:gap-4">
               <Bubble role="assistant">{currentSteps![stepIndex]!.question}</Bubble>
               <ChoiceGroup step={stepIndex + 1} choices={currentSteps![stepIndex]!.choices} onSelect={handleChoiceSelect} />
             </div>
           )}
 
-          <div className="mx-auto flex w-full max-w-screen-sm flex-col gap-3" role="log" aria-live="polite" aria-relevant="additions">
+          <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md flex-col gap-3 md:gap-4" role="log" aria-live="polite" aria-relevant="additions">
             {conversation.map((m, idx) => (
               <Bubble key={idx + m.ts} role={m.role}>{m.text}</Bubble>
             ))}
             {loading && (
-              <div className="mr-auto inline-flex items-center gap-2 rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 ring-1 ring-inset ring-gray-200">
+              <div className="mr-auto inline-flex items-center gap-2 md:gap-3 rounded-2xl bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-gray-900 text-[16px] md:text-[18px] ring-1 ring-inset ring-gray-200">
                 <span>Ernest réfléchit</span>
-                <span className="inline-flex gap-1">
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "0ms" }} />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "150ms" }} />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "300ms" }} />
+                <span className="inline-flex gap-1 md:gap-1.5">
+                  <span className="h-2 w-2 md:h-2.5 md:w-2.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "0ms" }} />
+                  <span className="h-2 w-2 md:h-2.5 md:w-2.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "150ms" }} />
+                  <span className="h-2 w-2 md:h-2.5 md:w-2.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "300ms" }} />
                 </span>
               </div>
             )}
             {error && (
-              <div className="mr-auto rounded-2xl bg-red-50 px-4 py-3 text-red-800 ring-1 ring-inset ring-red-200">
+              <div className="mr-auto rounded-2xl bg-red-50 px-4 md:px-5 py-3 md:py-3.5 text-red-800 text-[16px] md:text-[18px] ring-1 ring-inset ring-red-200">
                 {error} <button onClick={clearError} className="ml-2 underline">OK</button>
               </div>
             )}
@@ -929,18 +929,18 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
         </div>
 
       {/* Boutons juste au-dessus de l'input (bas de page) */}
-      <div className="px-4">
+      <div className="px-4 md:px-6">
         {screen === "home" && (
-          <div className="mx-auto mb-2 w-full max-w-screen-sm">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="mx-auto mb-2 md:mb-3 w-full max-w-screen-sm md:max-w-screen-md">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
               {ALL_INTENTS.map((i) => (
                 <button
                   key={i.key}
                   type="button"
                   onClick={() => handleSelectIntent(i.key)}
-                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-white px-3 py-2 text-[16px] text-gray-800 shadow-sm ring-1 ring-inset ring-gray-200 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+                  className="inline-flex min-h-[44px] md:min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-white px-3 md:px-4 py-2 md:py-2.5 text-[16px] md:text-[17px] text-gray-800 shadow-sm ring-1 ring-inset ring-gray-200 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
                 >
-                  <span className="text-2xl" aria-hidden>
+                  <span className="text-2xl md:text-3xl" aria-hidden>
                     {i.icon}
                   </span>
                   {i.label}
@@ -950,14 +950,14 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           </div>
         )}
         {screen === "sos" && (
-          <div className="mx-auto mb-2 w-full max-w-screen-sm">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="mx-auto mb-2 md:mb-3 w-full max-w-screen-sm md:max-w-screen-md">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-3">
               {SOS_OPTIONS.map((o) => (
                 <button
                   key={o.key}
                   type="button"
                   onClick={() => handleSelectSubIntent(o.key)}
-                  className="inline-flex min-h-[44px] items-center justify-center rounded-2xl bg-white px-3 py-2 text-[16px] text-gray-800 shadow-sm ring-1 ring-inset ring-gray-200 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+                  className="inline-flex min-h-[44px] md:min-h-[52px] items-center justify-center rounded-2xl bg-white px-3 md:px-4 py-2 md:py-2.5 text-[16px] md:text-[17px] text-gray-800 shadow-sm ring-1 ring-inset ring-gray-200 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
                 >
                   {o.label}
                 </button>
@@ -1002,43 +1002,45 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           <div className="absolute inset-0 bg-gradient-to-b from-[#4db1ff] to-[#cfe8ff] voice-overlay-bg" />
 
           {/* Top bar */}
-          <div className="relative flex items-center justify-between px-4 py-4 text-white/90">
+          <div className="relative flex items-center justify-between px-4 md:px-6 py-4 md:py-5 text-white/90">
             <button
               type="button"
               onClick={() => setVoiceMode(false)}
-              className="grid h-10 w-10 place-items-center rounded-full bg-white/20 backdrop-blur"
+              className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full bg-white/20 backdrop-blur"
               aria-label="Fermer"
             >
-              ←
+              <span className="text-lg md:text-xl">←</span>
             </button>
             <div className="text-left">
-              <div className="text-[16px] font-semibold">Mode Voix</div>
-              <div className="text-[12px] opacity-90">Ernest - Mode Voix • {voiceStatus}</div>
+              <div className="text-[16px] md:text-[18px] font-semibold">Mode Voix</div>
+              <div className="text-[12px] md:text-[14px] opacity-90">Ernest - Mode Voix • {voiceStatus}</div>
             </div>
-            <div className="grid h-10 w-10 place-items-center rounded-full bg-white/20 backdrop-blur" aria-hidden>≡</div>
+            <div className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full bg-white/20 backdrop-blur" aria-hidden>
+              <span className="text-lg md:text-xl">≡</span>
+            </div>
           </div>
 
           {/* Cercle animé */}
-          <div className="relative mx-auto mt-10 grid max-w-sm flex-1 place-items-center">
-            <div className="relative h-72 w-72">
+          <div className="relative mx-auto mt-10 md:mt-12 grid max-w-sm md:max-w-md flex-1 place-items-center">
+            <div className="relative h-72 w-72 md:h-80 md:w-80">
               <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(0,102,255,0.9),rgba(0,102,255,0.4)_40%,transparent_70%)] blur-[2px]" />
               {/* Anneaux tournants */}
               <div className="voice-arc voice-arc-1 voice-arc-spin" />
               <div className="voice-arc voice-arc-2 voice-arc-spin" />
               <div className="voice-arc voice-arc-3 voice-arc-spin" />
-              <div className="absolute inset-10 grid place-items-center text-center text-white">
-                <div className="text-2xl font-semibold">Ernest</div>
-                <div className="mt-2 text-md opacity-90">Votre guide intelligent pour une aide vocale immédiate.</div>
+              <div className="absolute inset-10 md:inset-12 grid place-items-center text-center text-white">
+                <div className="text-2xl md:text-3xl font-semibold">Ernest</div>
+                <div className="mt-2 md:mt-3 text-md md:text-lg opacity-90">Votre guide intelligent pour une aide vocale immédiate.</div>
               </div>
             </div>
           </div>
 
           {/* Bouton micro principal */}
-          <div className="relative mx-auto mb-16 grid place-items-center mic-pop">
+          <div className="relative mx-auto mb-16 md:mb-20 grid place-items-center mic-pop">
             <button
               type="button"
               onClick={() => (recording ? stopRec() : startRec())}
-              className={`group relative grid h-36 w-36 place-items-center rounded-full text-white shadow-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-white/60 ${recording ? "bg-gradient-to-b from-[#ff6b6b] to-[#e02424] animate-pulse" : "bg-gradient-to-b from-[#3aa0ff] to-[#1677ff]"}`}
+              className={`group relative grid h-36 w-36 md:h-40 md:w-40 place-items-center rounded-full text-white shadow-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-white/60 ${recording ? "bg-gradient-to-b from-[#ff6b6b] to-[#e02424] animate-pulse" : "bg-gradient-to-b from-[#3aa0ff] to-[#1677ff]"}`}
               aria-label="Appuyer pour parler"
             >
               {recording && (
@@ -1050,12 +1052,12 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
               <span className="absolute inset-0 -z-10 rounded-full bg-white/40 blur-xl transition group-hover:scale-110" />
               <span className="absolute inset-2 rounded-full bg-white/20" />
               {/* Remplissage dégradé façon maquette (halo clair en haut, plus dense au centre) */}
-              <span className={`absolute inset-6 rounded-full ring-1 ring-white/40 shadow-[inset_0_8px_20px_rgba(255,255,255,.45)] ${recording ? 'bg-[radial-gradient(ellipse_at_30%_25%,#ffd8d8_0%,#ff8a8a_55%,#e02424_95%)]' : 'bg-[radial-gradient(ellipse_at_30%_25%,#d9efff_0%,#86c7ff_55%,#2a8df8_95%)]'}`} />
+              <span className={`absolute inset-6 md:inset-7 rounded-full ring-1 ring-white/40 shadow-[inset_0_8px_20px_rgba(255,255,255,.45)] ${recording ? 'bg-[radial-gradient(ellipse_at_30%_25%,#ffd8d8_0%,#ff8a8a_55%,#e02424_95%)]' : 'bg-[radial-gradient(ellipse_at_30%_25%,#d9efff_0%,#86c7ff_55%,#2a8df8_95%)]'}`} />
               {/* Lueur/éclat supérieur subtil */}
-              <span className="absolute inset-6 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0)_45%)] mix-blend-screen pointer-events-none" />
-              <MicIcon className={`relative z-10 h-[60px] w-[60px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)] ${recording ? 'animate-pulse' : ''}`} />
+              <span className="absolute inset-6 md:inset-7 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0)_45%)] mix-blend-screen pointer-events-none" />
+              <MicIcon className={`relative z-10 h-[60px] w-[60px] md:h-[68px] md:w-[68px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)] ${recording ? 'animate-pulse' : ''}`} />
             </button>
-            <div className="mt-4 text-xl text-black/95">{recording ? "Appuyer pour arrêter" : "Appuyer pour parler"}</div>
+            <div className="mt-4 md:mt-5 text-xl md:text-2xl text-black/95">{recording ? "Appuyer pour arrêter" : "Appuyer pour parler"}</div>
           </div>
         </div>
       )}
