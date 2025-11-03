@@ -279,7 +279,7 @@ function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choic
 
 function TopBar({ onBack, onMenu, onReset }: { onBack: () => void; onMenu: () => void; onReset: () => void }) {
   return (
-    <header className="flex items-center justify-between px-3 md:px-6 py-2.5 md:py-4">
+    <header className="relative flex items-center justify-between px-3 md:px-6 py-2.5 md:py-4">
       <button
         type="button"
         onClick={onBack}
@@ -288,7 +288,7 @@ function TopBar({ onBack, onMenu, onReset }: { onBack: () => void; onMenu: () =>
       >
         <span aria-hidden className="text-base md:text-xl">←</span>
       </button>
-      <div className="text-[15px] md:text-[18px] font-semibold text-gray-900">Ernest</div>
+      <div className="absolute left-1/2 -translate-x-1/2 text-[20px] md:text-[22px] font-semibold text-gray-900">Ernest</div>
       <div className="flex items-center gap-2 md:gap-3">
         <button
           type="button"
@@ -297,7 +297,7 @@ function TopBar({ onBack, onMenu, onReset }: { onBack: () => void; onMenu: () =>
           aria-label="Effacer la conversation"
           title="Effacer la conversation"
         >
-          <span aria-hidden className="text-sm md:text-lg">🗑️</span>
+          <TrashIcon className="h-4 w-4 md:h-5 md:w-5" />
         </button>
         <button
           type="button"
@@ -334,6 +334,16 @@ function StickyBar({ onBack, onHome, onContact, onReminder }: { onBack: () => vo
         </div>
       </div>
     </div>
+  );
+}
+
+function TrashIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} role="img" aria-label="Effacer">
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </svg>
   );
 }
 
@@ -716,6 +726,24 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       setScreen("home");
       return;
     }
+    // Si on est déjà à l'écran home, on essaie de revenir à WeWeb
+    if (screen === "home") {
+      // Essayer d'envoyer un message à la page parent WeWeb
+      try {
+        if (window.parent && window.parent !== window) {
+          // Envoyer un message à WeWeb pour fermer/retourner
+          window.parent.postMessage({ type: 'ernest:back', action: 'close' }, '*');
+          // Aussi essayer d'utiliser history.back() si disponible
+          if (window.parent.history && typeof window.parent.history.back === 'function') {
+            window.parent.history.back();
+          }
+        }
+      } catch (e) {
+        // Si la communication avec le parent échoue, on reste sur l'écran home
+        console.log('Impossible de communiquer avec la page parent');
+      }
+      return;
+    }
     setScreen("home");
     setIntent(null);
     setSubIntent(null);
@@ -877,8 +905,8 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       <div className="flex flex-1 flex-col gap-3 md:gap-5 px-3 md:px-6 py-4 md:py-3 overflow-y-auto min-h-0 pb-8 md:pb-4">
           {/* Message central d'accueil */}
           {conversation.length === 0 && (
-            <div className="flex w-full flex-1 items-start justify-center pt-8 md:pt-12">
-              <p className="mx-auto max-w-screen-sm md:max-w-screen-md text-center text-gray-900 text-[15px] md:text-[18px] font-normal">
+            <div className="flex w-full flex-1 items-center justify-center pt-8 md:pt-12">
+              <p className="w-full max-w-screen-sm md:max-w-screen-md text-center text-gray-900 text-[15px] md:text-[18px] font-normal">
                 Sélectionnez un sujet et commençons.
               </p>
             </div>

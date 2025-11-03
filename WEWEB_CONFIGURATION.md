@@ -240,5 +240,54 @@ Le widget utilise les breakpoints Tailwind suivants :
 
 ---
 
+## 🔙 Navigation retour vers WeWeb
+
+Le widget peut communiquer avec WeWeb pour permettre un retour en arrière lorsque l'utilisateur clique sur le bouton retour à l'écran d'accueil.
+
+### Configuration dans WeWeb
+
+Pour que le bouton retour fonctionne et revienne à l'élément WeWeb parent, ajoutez ce code JavaScript dans votre page WeWeb (via un élément "Code HTML" ou dans les scripts de la page) :
+
+```javascript
+// Écouter les messages du widget Ernest
+window.addEventListener('message', function(event) {
+  // Vérifier que le message vient du widget Ernest
+  if (event.data && event.data.type === 'ernest:back' && event.data.action === 'close') {
+    // Revenir en arrière dans WeWeb
+    // Option 1 : Utiliser l'historique du navigateur
+    if (window.history && window.history.length > 1) {
+      window.history.back();
+    }
+    // Option 2 : Ou rediriger vers une page spécifique
+    // window.location.href = '/votre-page-precedente';
+  }
+});
+```
+
+### Comportement du bouton retour
+
+- **Écran de chat/étapes** : Le bouton retour navigue dans les étapes de la conversation
+- **Écran SOS** : Le bouton retour revient à l'écran d'accueil
+- **Écran d'accueil** : Le bouton retour envoie un message à WeWeb pour revenir en arrière
+
+### Alternative : Utiliser le router WeWeb
+
+Si vous utilisez le router WeWeb pour la navigation, vous pouvez adapter le code ainsi :
+
+```javascript
+window.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'ernest:back' && event.data.action === 'close') {
+    // Utiliser le router WeWeb pour naviguer
+    // Exemple avec Next.js (si WeWeb utilise Next.js) :
+    // router.back();
+    
+    // Ou utiliser la méthode de navigation WeWeb spécifique
+    // Consultez la documentation WeWeb pour la méthode exacte
+  }
+});
+```
+
+---
+
 Pour toute question ou problème, vérifiez la console du navigateur pour les erreurs JavaScript.
 
