@@ -221,7 +221,7 @@ function Bubble({
 
   return (
     <div
-      className={`max-w-[85%] md:max-w-[75%] whitespace-pre-wrap rounded-2xl px-4 md:px-5 py-3 md:py-4 shadow-sm ring-1 ring-inset ${
+      className={`max-w-[85%] md:max-w-[75%] whitespace-pre-wrap rounded-2xl px-3 md:px-5 py-2 md:py-4 shadow-sm ring-1 ring-inset ${
         isUser
           ? "ml-auto bg-blue-600 text-white ring-blue-500"
           : "mr-auto bg-gray-100 text-gray-900 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700"
@@ -279,33 +279,33 @@ function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choic
 
 function TopBar({ onBack, onMenu, onReset }: { onBack: () => void; onMenu: () => void; onReset: () => void }) {
   return (
-    <header className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
+    <header className="flex items-center justify-between px-3 md:px-6 py-2.5 md:py-4">
       <button
         type="button"
         onClick={onBack}
-        className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+        className="grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
         aria-label="Retour"
       >
-        <span aria-hidden className="text-lg md:text-xl">←</span>
+        <span aria-hidden className="text-base md:text-xl">←</span>
       </button>
-      <div className="text-[16px] md:text-[18px] font-semibold text-gray-900">Ernest</div>
+      <div className="text-[15px] md:text-[18px] font-semibold text-gray-900">Ernest</div>
       <div className="flex items-center gap-2 md:gap-3">
         <button
           type="button"
           onClick={onReset}
-          className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+          className="grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
           aria-label="Effacer la conversation"
           title="Effacer la conversation"
         >
-          <span aria-hidden className="text-base md:text-lg">🗑️</span>
+          <span aria-hidden className="text-sm md:text-lg">🗑️</span>
         </button>
         <button
           type="button"
           onClick={onMenu}
-          className="grid h-10 w-10 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+          className="grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
           aria-label="Menu"
         >
-          <span aria-hidden className="text-lg md:text-xl">≡</span>
+          <span aria-hidden className="text-base md:text-xl">≡</span>
         </button>
       </div>
     </header>
@@ -382,8 +382,8 @@ function Composer({
   meterLevel,
 }: ComposerProps) {
   return (
-    <div className="w-full px-4 md:px-6 py-3 md:py-4">
-      <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md items-center gap-3 md:gap-4 rounded-full bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-gray-700">
+    <div className="w-full px-3 md:px-6 py-2.5 md:py-4">
+      <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md items-center gap-2.5 md:gap-4 rounded-full bg-gray-100 px-3 md:px-5 py-2 md:py-3.5 text-gray-700">
         {listening ? (
           <div
             className="flex-1 inline-flex items-center gap-3 rounded-lg bg-white/70 px-3 py-2 ring-1 ring-inset ring-gray-300 text-gray-700 min-w-0"
@@ -428,25 +428,25 @@ function Composer({
             }}
             placeholder="Posez votre question"
             aria-label="Posez votre question"
-            className="flex-1 bg-transparent text-[16px] md:text-[18px] outline-none placeholder:text-gray-500"
+            className="flex-1 bg-transparent text-[15px] md:text-[18px] outline-none placeholder:text-gray-500"
           />
         )}
         <button
           type="button"
           onClick={onMic}
-          className={`grid h-9 w-9 md:h-10 md:w-10 flex-shrink-0 place-items-center rounded-full text-gray-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 ${listening ? "animate-pulse text-red-600" : ""}`}
+          className={`grid h-8 w-8 md:h-10 md:w-10 flex-shrink-0 place-items-center rounded-full text-gray-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 ${listening ? "animate-pulse text-red-600" : ""}`}
           aria-label={listening ? "Arrêter la dictée" : "Démarrer la dictée"}
           title={listening ? "Écoute en cours…" : "Dicter un message"}
         >
-          <MicIcon className="h-8 w-8 md:h-9 md:w-9" />
+          <MicIcon className="h-6 w-6 md:h-9 md:w-9" />
         </button>
         <button
           type="button"
           onClick={onVoice}
-          className="grid h-12 w-12 md:h-14 md:w-14 flex-shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50"
+          className="grid h-10 w-10 md:h-14 md:w-14 flex-shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50"
           aria-label="Mode Voix"
         >
-          <SendWavesIcon className="h-8 w-8 md:h-9 md:w-9" />
+          <SendWavesIcon className="h-6 w-6 md:h-9 md:w-9" />
         </button>
       </div>
     </div>
@@ -853,7 +853,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
   }
 
   return (
-    <section ref={containerRef} className="flex h-full min-h-full w-full flex-col bg-white text-[18px] md:text-[19px] overflow-hidden">
+    <section ref={containerRef} className="flex h-full min-h-full w-full flex-col bg-white text-[16px] md:text-[19px] overflow-hidden">
       <TopBar
         onBack={handleBack}
         onMenu={() => { /* menu plus tard */ }}
@@ -874,13 +874,13 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       {false && screen === "sos" && <div />}
 
       {/* Conversation area - toujours visible */}
-      <div className="flex flex-1 flex-col gap-4 md:gap-5 px-4 md:px-6 py-2 md:py-3 overflow-y-auto min-h-0">
+      <div className="flex flex-1 flex-col gap-3 md:gap-5 px-3 md:px-6 py-4 md:py-3 overflow-y-auto min-h-0 pb-8 md:pb-4">
           {/* Message central d'accueil */}
           {conversation.length === 0 && (
-            <div className="grid w-full flex-1 place-items-center">
-              <div className="mx-auto max-w-screen-sm md:max-w-screen-md rounded-2xl bg-white px-4 md:px-6 py-3 md:py-4 text-center text-gray-700 text-[16px] md:text-[18px] shadow-sm ring-1 ring-inset ring-gray-200">
-                Sélectionnez un thème ou tapez directement pour commencer.
-              </div>
+            <div className="flex w-full flex-1 items-start justify-center pt-8 md:pt-12">
+              <p className="mx-auto max-w-screen-sm md:max-w-screen-md text-center text-gray-900 text-[15px] md:text-[18px] font-normal">
+                Sélectionnez un sujet et commençons.
+              </p>
             </div>
           )}
           {/* Safety banner */}
@@ -905,7 +905,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
             </div>
           )}
 
-          <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md flex-col gap-3 md:gap-4" role="log" aria-live="polite" aria-relevant="additions">
+          <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md flex-col gap-2.5 md:gap-4" role="log" aria-live="polite" aria-relevant="additions">
             {conversation.map((m, idx) => (
               <Bubble key={idx + m.ts} role={m.role}>{m.text}</Bubble>
             ))}
@@ -929,20 +929,17 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
         </div>
 
       {/* Boutons juste au-dessus de l'input (bas de page) */}
-      <div className="px-4 md:px-6">
+      <div className="px-3 md:px-6">
         {screen === "home" && (
-          <div className="mx-auto mb-2 md:mb-3 w-full max-w-screen-sm md:max-w-screen-md">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+          <div className="mx-auto mb-2 md:mb-3 mt-16 md:mt-20 w-full max-w-screen-sm md:max-w-screen-md">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-2.5">
               {ALL_INTENTS.map((i) => (
                 <button
                   key={i.key}
                   type="button"
                   onClick={() => handleSelectIntent(i.key)}
-                  className="inline-flex min-h-[44px] md:min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-white px-3 md:px-4 py-2 md:py-2.5 text-[16px] md:text-[17px] text-gray-800 shadow-sm ring-1 ring-inset ring-gray-200 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+                  className="inline-flex min-h-[36px] md:min-h-[40px] items-center justify-center rounded-xl bg-white px-2.5 md:px-3 py-1.5 md:py-2 text-[14px] md:text-[15px] text-gray-800 shadow-sm ring-1 ring-inset ring-gray-200 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
                 >
-                  <span className="text-2xl md:text-3xl" aria-hidden>
-                    {i.icon}
-                  </span>
                   {i.label}
                 </button>
               ))}
