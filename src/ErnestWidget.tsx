@@ -731,12 +731,12 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       // Essayer d'envoyer un message à la page parent WeWeb
       try {
         if (window.parent && window.parent !== window) {
-          // Envoyer un message à WeWeb pour fermer/retourner
-          window.parent.postMessage({ type: 'ernest:back', action: 'close' }, '*');
-          // Aussi essayer d'utiliser history.back() si disponible
-          if (window.parent.history && typeof window.parent.history.back === 'function') {
-            window.parent.history.back();
-          }
+          // Envoyer un message à WeWeb pour rediriger vers la page SOS
+          window.parent.postMessage({ 
+            type: 'ernest:back', 
+            action: 'navigate',
+            target: 'SOS'
+          }, '*');
         }
       } catch (e) {
         // Si la communication avec le parent échoue, on reste sur l'écran home

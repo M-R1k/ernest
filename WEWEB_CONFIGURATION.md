@@ -242,24 +242,44 @@ Le widget utilise les breakpoints Tailwind suivants :
 
 ## 🔙 Navigation retour vers WeWeb
 
-Le widget peut communiquer avec WeWeb pour permettre un retour en arrière lorsque l'utilisateur clique sur le bouton retour à l'écran d'accueil.
+Le widget peut communiquer avec WeWeb pour rediriger vers une page spécifique (par exemple "SOS") lorsque l'utilisateur clique sur le bouton retour à l'écran d'accueil.
 
 ### Configuration dans WeWeb
 
-Pour que le bouton retour fonctionne et revienne à l'élément WeWeb parent, ajoutez ce code JavaScript dans votre page WeWeb (via un élément "Code HTML" ou dans les scripts de la page) :
+Pour que le bouton retour fonctionne et redirige vers votre page "SOS", ajoutez ce code JavaScript dans votre page WeWeb (via un élément "Code HTML" ou dans les scripts de la page) :
 
 ```javascript
 // Écouter les messages du widget Ernest
 window.addEventListener('message', function(event) {
   // Vérifier que le message vient du widget Ernest
-  if (event.data && event.data.type === 'ernest:back' && event.data.action === 'close') {
-    // Revenir en arrière dans WeWeb
-    // Option 1 : Utiliser l'historique du navigateur
-    if (window.history && window.history.length > 1) {
-      window.history.back();
+  if (event.data && event.data.type === 'ernest:back' && event.data.action === 'navigate') {
+    // Rediriger vers la page SOS dans WeWeb
+    if (event.data.target === 'SOS') {
+      // Option 1 : Utiliser la navigation WeWeb par URL
+      window.location.href = '/SOS'; // Adaptez le chemin selon votre structure
+      
+      // Option 2 : Utiliser le router WeWeb si disponible
+      // router.push('/SOS');
+      
+      // Option 3 : Utiliser l'API de navigation WeWeb
+      // Consultez la documentation WeWeb pour la méthode exacte de navigation
     }
-    // Option 2 : Ou rediriger vers une page spécifique
-    // window.location.href = '/votre-page-precedente';
+  }
+});
+```
+
+### Configuration personnalisée
+
+Si votre page SOS a un chemin différent, modifiez le code ainsi :
+
+```javascript
+window.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'ernest:back' && event.data.action === 'navigate') {
+    if (event.data.target === 'SOS') {
+      // Remplacez '/SOS' par le chemin réel de votre page dans WeWeb
+      window.location.href = '/votre-chemin-vers-sos';
+      // Ou utilisez window.location.pathname = '/votre-chemin-vers-sos';
+    }
   }
 });
 ```
@@ -268,7 +288,7 @@ window.addEventListener('message', function(event) {
 
 - **Écran de chat/étapes** : Le bouton retour navigue dans les étapes de la conversation
 - **Écran SOS** : Le bouton retour revient à l'écran d'accueil
-- **Écran d'accueil** : Le bouton retour envoie un message à WeWeb pour revenir en arrière
+- **Écran d'accueil** : Le bouton retour envoie un message à WeWeb pour rediriger vers la page "SOS"
 
 ### Alternative : Utiliser le router WeWeb
 
@@ -276,13 +296,17 @@ Si vous utilisez le router WeWeb pour la navigation, vous pouvez adapter le code
 
 ```javascript
 window.addEventListener('message', function(event) {
-  if (event.data && event.data.type === 'ernest:back' && event.data.action === 'close') {
-    // Utiliser le router WeWeb pour naviguer
-    // Exemple avec Next.js (si WeWeb utilise Next.js) :
-    // router.back();
-    
-    // Ou utiliser la méthode de navigation WeWeb spécifique
-    // Consultez la documentation WeWeb pour la méthode exacte
+  if (event.data && event.data.type === 'ernest:back' && event.data.action === 'navigate') {
+    if (event.data.target === 'SOS') {
+      // Utiliser le router WeWeb pour naviguer
+      // Exemple avec Next.js (si WeWeb utilise Next.js) :
+      // import { useRouter } from 'next/router';
+      // const router = useRouter();
+      // router.push('/SOS');
+      
+      // Ou utiliser la méthode de navigation WeWeb spécifique
+      // Consultez la documentation WeWeb pour la méthode exacte
+    }
   }
 });
 ```
