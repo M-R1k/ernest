@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import useErnest from "./hooks/useErnest";
-import type { ErnestWidgetProps, Intent, SubIntent, SendActionArgs, ChatMessage } from "./types";
+import type { ErnestWidgetProps, Intent, SubIntent, SendActionArgs, ChatMessage, SosSubIntent } from "./types";
 import { ariaButtonProps, onActivate, focusFirstInteractive } from "./utils/accessibility";
+import ReactMarkdown from 'react-markdown';
 
 type Screen = "home" | "sos" | "chat";
 
@@ -11,10 +12,10 @@ const ALL_INTENTS: Array<{ key: Intent; label: string; icon: string }> = [
   { key: "SECURE_DEVICE", label: "Je sécurise mes appareils", icon: "📱" },
   { key: "AWARENESS", label: "Je me sensibilise à la cybersécurité", icon: "💡" },
   { key: "SAFE_BROWSING", label: "Je veux naviguer en sécurité", icon: "🌐" },
-  { key: "SOS", label: "🆘 J’ai besoin d’aide", icon: "🆘" },
+  { key: "SOS", label: "J’ai besoin d’aide", icon: "🆘" },
 ];
 
-const SOS_OPTIONS: Array<{ key: Exclude<SubIntent, null>; label: string }> = [
+const SOS_OPTIONS: Array<{ key: SosSubIntent; label: string }> = [
   { key: "ACCOUNT_TAKEOVER", label: "Mon compte a été piraté" },
   { key: "LOST_MONEY", label: "J’ai perdu de l’argent" },
   { key: "PHONE_STOLEN", label: "Mon téléphone est volé" },
@@ -25,7 +26,8 @@ type Choice = { value: string; label: string };
 type StepDef = { question: string; choices: Choice[] };
 
 // Minimal flow definitions (can be extended)
-const NON_SOS_FLOWS: Record<Exclude<Intent, "SOS" | "HOME">, StepDef[]> = {
+type ActionableIntent = Exclude<Intent, "SOS" | "HOME" | "fallback">;
+const NON_SOS_FLOWS: Record<ActionableIntent, StepDef[]> = {
   SECURE_ACCOUNTS: [
     {
       question: "Que souhaitez-vous faire ?",
@@ -83,7 +85,7 @@ const NON_SOS_FLOWS: Record<Exclude<Intent, "SOS" | "HOME">, StepDef[]> = {
   ],
 };
 
-const SOS_FLOWS: Record<Exclude<SubIntent, null>, StepDef[]> = {
+const SOS_FLOWS: Record<SosSubIntent, StepDef[]> = {
   ACCOUNT_TAKEOVER: [
     {
       question: "Avez-vous encore accès à votre compte ?",
@@ -208,17 +210,43 @@ function LargeButton({ icon, label, onClick, ariaLabel }: { icon: string; label:
   );
 }
 
-function Bubble({ role, children }: { role: "user" | "assistant"; children: React.ReactNode }) {
+function Bubble({
+  role,
+  children,
+}: {
+  role: "user" | "assistant";
+  children: React.ReactNode;
+}) {
   const isUser = role === "user";
+
   return (
-    <div className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 shadow-sm ring-1 ring-inset ${
-      isUser
-        ? "ml-auto bg-blue-600 text-white ring-blue-500"
-        : "mr-auto bg-gray-100 text-gray-900 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700"
-    }`}
+    <div
+      className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 shadow-sm ring-1 ring-inset ${
+        isUser
+          ? "ml-auto bg-blue-600 text-white ring-blue-500"
+          : "mr-auto bg-gray-100 text-gray-900 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700"
+      }`}
       aria-live={isUser ? undefined : "polite"}
     >
-      {children}
+      {isUser ? (
+        // 🧍 Les messages de l’utilisateur restent du texte brut
+        children
+      ) : (
+        // 🤖 Les messages d’Ernest sont rendus avec Markdown
+                <div className="prose prose-sm prose-gray dark:prose-invert max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => <p className="mb-2">{children}</p>,
+                      strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                      ul: ({ children }) => <ul className="list-disc pl-5 mb-2">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal pl-5 mb-2">{children}</ol>,
+                      li: ({ children }) => <li className="mb-1">{children}</li>,
+                    }}
+                  >
+                    {String(children)}
+                  </ReactMarkdown>
+                </div>
+      )}
     </div>
   );
 }
@@ -449,6 +477,33 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Float32Array | null>(null);
 
+  // Mapping texte libre → intent/subIntent (heuristique simple)
+  function mapTextToMeta(text: string): { intent: Intent; subIntent?: Exclude<SubIntent, null> } | null {
+    const t = text.toLowerCase();
+    // SECURE_ACCOUNTS
+    if ((t.includes("mot de passe") || t.includes("password")) && (t.includes("créer") || t.includes("generer") || t.includes("générer") || t.includes("nouveau"))) {
+      return { intent: "SECURE_ACCOUNTS", subIntent: "password_create" };
+    }
+    if (t.includes("2fa") || (t.includes("double") && (t.includes("auth") || t.includes("sécurité") || t.includes("authent")))) {
+      return { intent: "SECURE_ACCOUNTS", subIntent: "2fa" };
+    }
+    // SAFE_BROWSING
+    if ((t.includes("verifier un site") || t.includes("vérifier un site") || (t.includes("site") && (t.includes("verifier") || t.includes("vérifier") || t.includes("fiable"))))) {
+      return { intent: "SAFE_BROWSING", subIntent: "verify_site" };
+    }
+    if (t.includes("wifi public") || t.includes("wi-fi public")) {
+      return { intent: "SAFE_BROWSING", subIntent: "public_wifi" };
+    }
+    // CHECK_SCAM
+    if (t.includes("mail suspect") || (t.includes("email") && (t.includes("suspect") || t.includes("phishing") || t.includes("hameçonnage")))) {
+      return { intent: "CHECK_SCAM", subIntent: "email_suspect" };
+    }
+    if ((t.includes("sms") || t.includes("appel")) && (t.includes("suspect") || t.includes("etrange") || t.includes("étrange"))) {
+      return { intent: "CHECK_SCAM", subIntent: "sms_call" };
+    }
+    return null;
+  }
+
   useEffect(() => {
     if (containerRef.current) focusFirstInteractive(containerRef.current);
   }, [screen]);
@@ -588,9 +643,10 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     if (!intent) return null;
     if (intent === "SOS") {
       if (!subIntent) return null;
-      return SOS_FLOWS[subIntent];
+      return SOS_FLOWS[subIntent as SosSubIntent];
     }
-    return NON_SOS_FLOWS[intent as Exclude<Intent, "SOS" | "HOME">] || null;
+    if (intent === "HOME" || intent === "fallback") return null;
+    return NON_SOS_FLOWS[intent as ActionableIntent] || null;
   }, [intent, subIntent]);
 
   function handleSelectIntent(i: Intent) {
@@ -617,13 +673,23 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     const stepDef = currentSteps?.[stepIndex];
     if (!intent || !stepDef) return;
     const step = stepIndex + 1;
-    const text = `${stepDef.question} → ${value}`;
-    if (value === "fallback") addProgress("Besoin d’assistance supplémentaire");
-    emitTelemetry({ type: "action", intent, subIntent: subIntent || undefined, step });
-    await sendAction({ intent, subIntent: subIntent || undefined, step, text });
+    const choice = stepDef.choices.find((c) => c.value === value);
+    const chatInput = choice?.label || value;
+    let outIntent: Intent = intent;
+    let outSub: Exclude<SubIntent, null> | undefined = subIntent || undefined;
+    if (value === "fallback") {
+      outIntent = "fallback" as Intent;
+      outSub = undefined;
+      addProgress("Besoin d’assistance supplémentaire");
+    } else if (intent !== "SOS") {
+      // Dans les parcours non-SOS, la valeur choisie est le subIntent métier
+      outSub = value as Exclude<SubIntent, null>;
+    }
+    emitTelemetry({ type: "action", intent: outIntent, subIntent: outSub, step });
+    await sendAction({ intent: outIntent, subIntent: outSub, step, text: chatInput });
 
     // Keyword safety banner
-    const maybeUrl = keywordBannerUrlFor(text);
+    const maybeUrl = keywordBannerUrlFor(chatInput);
     setShowBannerUrl(maybeUrl);
 
     // Advance step or finalize
@@ -742,6 +808,14 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       const fileName = blob.type.includes("ogg") ? "voice.ogg" : blob.type.includes("mp4") ? "voice.m4a" : "voice.webm";
       fd.append("audio", blob, fileName);
       fd.append("sessionId", sessionId);
+      // Ajout d'un meta minimal côté audio (avant transcription serveur)
+      const audioMeta = {
+        intent: intent || ("fallback" as Intent),
+        subIntent: (subIntent ?? null) as SubIntent,
+        step: stepIndex > 0 ? stepIndex : 1,
+      };
+      fd.append("chatInput", "🎤 Message vocal");
+      fd.append("meta", JSON.stringify(audioMeta));
 
       const res = await fetchWithTimeout(webhookUrl, { method: "POST", body: fd });
       const raw = await res.text();
@@ -758,6 +832,15 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       emitTelemetry({ type: "voice_sent", intent: intent || undefined, subIntent: subIntent || undefined, step: stepIndex });
       // Ajout du message utilisateur: préférer la transcription si disponible
       const userText = data?.transcript ? String(data.transcript) : "🎤 Message vocal envoyé";
+      // Essai de mapping manuel côté client si transcript présent
+      if (data?.transcript) {
+        const mapped = mapTextToMeta(String(data.transcript));
+        if (mapped) {
+          // On envoie explicitement l'intent/subIntent si identifiable
+          const effStep = stepIndex > 0 ? stepIndex : 1;
+          await sendAction({ intent: mapped.intent, subIntent: mapped.subIntent, step: effStep, text: String(data.transcript) });
+        }
+      }
       appendUser(userText);
       // Ajouter la réponse assistant
       if (data?.answer) {
@@ -855,8 +938,11 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
                   key={i.key}
                   type="button"
                   onClick={() => handleSelectIntent(i.key)}
-                  className="inline-flex min-h-[44px] items-center justify-center rounded-2xl bg-white px-3 py-2 text-[16px] text-gray-800 shadow-sm ring-1 ring-inset ring-gray-200 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-white px-3 py-2 text-[16px] text-gray-800 shadow-sm ring-1 ring-inset ring-gray-200 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
                 >
+                  <span className="text-2xl" aria-hidden>
+                    {i.icon}
+                  </span>
                   {i.label}
                 </button>
               ))}
@@ -889,8 +975,12 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           const msg = composerText.replace(/\s*\[.*\]$/, "").trim();
           if (!msg) return;
           emitTelemetry({ type: "text_send", intent: intent || undefined, subIntent: subIntent || undefined, step: stepIndex });
-          // Envoie en texte libre côté API
-          sendAction({ intent: intent || "HOME", subIntent: subIntent || undefined, step: stepIndex, text: msg });
+          // Mapping texte → intent/subIntent. Fallback si non reconnu
+          const mapped = mapTextToMeta(msg);
+          const effectiveIntent: Intent = mapped?.intent || ("fallback" as Intent);
+          const effectiveSub: Exclude<SubIntent, null> | undefined = mapped?.subIntent || undefined;
+          const effectiveStep = stepIndex > 0 ? stepIndex : 1;
+          sendAction({ intent: effectiveIntent, subIntent: effectiveSub, step: effectiveStep, text: msg });
           setComposerText("");
         }}
         onMic={() => {

@@ -13,14 +13,46 @@ export type Intent =
   | "SECURE_DEVICE"
   | "AWARENESS"
   | "SAFE_BROWSING"
-  | "SOS";
+  | "SOS"
+  | "fallback";
 
 export type SubIntent =
   | "ACCOUNT_TAKEOVER"
   | "LOST_MONEY"
   | "PHONE_STOLEN"
   | "DATA_LEAK"
+  // SECURE_ACCOUNTS
+  | "password_create"
+  | "2fa"
+  | "account_blocked"
+  | "password_check"
+  // CHECK_SCAM
+  | "email_suspect"
+  | "sms_call"
+  | "payment_code"
+  | "site_doubt"
+  // SECURE_DEVICE
+  | "phone_tablet"
+  | "computer"
+  | "device_slow"
+  | "device_lost"
+  // AWARENESS
+  | "good_habits"
+  | "mistakes_to_avoid"
+  | "understand_scams"
+  | "quiz"
+  // SAFE_BROWSING
+  | "verify_site"
+  | "public_wifi"
+  | "download_program"
+  | "browse_safer"
   | null;
+
+export type SosSubIntent =
+  | "ACCOUNT_TAKEOVER"
+  | "LOST_MONEY"
+  | "PHONE_STOLEN"
+  | "DATA_LEAK";
 
 export interface ErnestMeta {
   intent: Intent;
