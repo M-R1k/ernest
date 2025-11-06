@@ -38,9 +38,24 @@ html, body {
   100% { transform: scale(1); }
 }
 
+/* Animation slide-up pour le nouveau mode voix (moitié basse) */
+@keyframes voiceOverlaySlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 .voice-overlay-enter { animation: voiceOverlayIn 420ms cubic-bezier(.2,.8,.2,1) both; }
 .voice-overlay-bg { animation: voiceOverlayBgIn 600ms ease-out both; }
 .mic-pop { animation: micPopIn 420ms cubic-bezier(.2,.8,.2,1) 120ms both; }
+.voice-overlay-slide-up {
+  animation: voiceOverlaySlideUp 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 
 /* Anneaux tournants autour d'Ernest */
 @keyframes spin360 {

@@ -4,15 +4,15 @@
 
 ### Mobile (par défaut)
 - **Largeur** : `100%` (ou largeur fixe `320px` minimum)
-- **Hauteur** : `80vh` recommandé (ou hauteur fixe `600px` minimum, recommandé : `650px` à `750px` pour un rendu chatbot réel)
+- **Hauteur** : `100vh` (hauteur complète de l'écran) ou hauteur fixe `600px` minimum
 
 ### Tablette (à partir de 768px)
 - **Largeur** : `100%` (ou largeur fixe `768px` minimum)
 - **Hauteur** : `700px` minimum (recommandé : `750px` à `800px`)
 
-### Desktop (optionnel, si besoin)
-- **Largeur** : `100%` ou largeur max `1024px`
-- **Hauteur** : `750px` minimum
+### Desktop (à partir de 1024px)
+- **Largeur** : `100%` ou largeur max selon votre design
+- **Hauteur** : `100vh` (hauteur complète de l'écran) ou hauteur fixe `800px` minimum
 
 ---
 
@@ -46,7 +46,7 @@ allow: microphone; camera (pour le mode voix)
 #### Style par défaut (Mobile First - style chatbot)
 ```css
 width: 100%
-height: 80vh  /* ou 700px pour un rendu chatbot réel */
+height: 100vh  /* Hauteur complète de l'écran */
 min-width: 320px
 min-height: 600px
 ```
@@ -59,6 +59,16 @@ width: 100%
 height: 750px
 min-width: 768px
 min-height: 700px
+```
+
+#### Style pour Desktop (breakpoint lg: 1024px)
+Dans WeWeb, configurez un **breakpoint responsive** à `1024px` :
+
+```css
+width: 100%
+height: 100vh  /* Hauteur complète de l'écran */
+min-width: 1024px
+min-height: 800px
 ```
 
 #### Configuration WeWeb spécifique
@@ -249,20 +259,29 @@ Le widget peut communiquer avec WeWeb pour rediriger vers une page spécifique (
 Pour que le bouton retour fonctionne et redirige vers votre page "SOS", ajoutez ce code JavaScript dans votre page WeWeb (via un élément "Code HTML" ou dans les scripts de la page) :
 
 ```javascript
-// Écouter les messages du widget Ernest
+// Écouter les événements personnalisés du widget Ernest (si le widget n'est pas dans un iframe)
+window.addEventListener('ernest:back', function(event) {
+  console.log('Événement ernest:back reçu:', event.detail);
+  if (event.detail && event.detail.target === 'SOS') {
+    console.log('Redirection vers /SOS');
+    // Rediriger vers la page SOS dans WeWeb
+    window.location.href = '/SOS'; // Adaptez le chemin selon votre structure
+  }
+});
+
+// Écouter aussi les messages postMessage (si le widget est dans un iframe)
 window.addEventListener('message', function(event) {
+  // Debug : Afficher tous les messages reçus
+  console.log('Message reçu de l\'iframe:', event.data);
+  
   // Vérifier que le message vient du widget Ernest
   if (event.data && event.data.type === 'ernest:back' && event.data.action === 'navigate') {
+    console.log('Message Ernest détecté, redirection vers SOS...');
+    
     // Rediriger vers la page SOS dans WeWeb
     if (event.data.target === 'SOS') {
-      // Option 1 : Utiliser la navigation WeWeb par URL
+      console.log('Redirection vers /SOS');
       window.location.href = '/SOS'; // Adaptez le chemin selon votre structure
-      
-      // Option 2 : Utiliser le router WeWeb si disponible
-      // router.push('/SOS');
-      
-      // Option 3 : Utiliser l'API de navigation WeWeb
-      // Consultez la documentation WeWeb pour la méthode exacte de navigation
     }
   }
 });
@@ -310,6 +329,49 @@ window.addEventListener('message', function(event) {
   }
 });
 ```
+
+---
+
+### 🔍 Dépannage : Le bouton retour ne fonctionne pas
+
+Si le bouton retour ne fonctionne pas, suivez ces étapes :
+
+#### 1. Vérifier que le code JavaScript est bien ajouté dans WeWeb
+
+- Ouvrez votre page WeWeb dans l'éditeur
+- Ajoutez un élément "Code HTML" ou "Script" 
+- Collez le code JavaScript d'écoute des messages
+- Sauvegardez et republiez si nécessaire
+
+#### 2. Ouvrir la console du navigateur
+
+1. Ouvrez votre page dans un navigateur
+2. Appuyez sur `F12` ou `Cmd+Option+I` (Mac) pour ouvrir les outils développeur
+3. Allez dans l'onglet "Console"
+4. Cliquez sur le bouton retour dans le widget
+5. Vous devriez voir dans la console :
+   - `Envoi du message à WeWeb: {type: 'ernest:back', ...}`
+   - `Message reçu de l'iframe: {type: 'ernest:back', ...}`
+
+#### 3. Vérifier le chemin de la page SOS
+
+Assurez-vous que le chemin `/SOS` correspond bien au chemin réel de votre page dans WeWeb. Si votre page s'appelle différemment, modifiez :
+
+```javascript
+window.location.href = '/votre-chemin-reel'; // Par exemple '/sos', '/page-sos', etc.
+```
+
+#### 4. Tester en local
+
+Si le widget est hébergé sur un domaine différent, vous pourriez avoir des problèmes de sécurité (CORS). Dans ce cas, testez d'abord en local pour vérifier que la communication fonctionne.
+
+#### 5. Vérifier que vous êtes dans un iframe
+
+Le widget vérifie automatiquement s'il est dans un iframe. Si vous voyez le message `Pas dans un iframe` dans la console, cela signifie que le widget n'est pas dans un iframe et la communication avec WeWeb ne fonctionnera pas.
+
+#### 6. Alternative : Utiliser un bouton WeWeb directement
+
+Si la communication via `postMessage` ne fonctionne pas, vous pouvez ajouter un bouton directement dans WeWeb qui redirige vers la page SOS, et masquer le bouton retour du widget dans WeWeb.
 
 ---
 
