@@ -1536,6 +1536,9 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
   function startMeter() {
     if (meterRafRef.current) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      return;
+    }
     navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: false } }).then((stream) => {
       meterStreamRef.current = stream;
       const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -1567,8 +1570,10 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
         meterRafRef.current = requestAnimationFrame(tick);
       };
       tick();
-    }).catch(() => {
-      // ignore if user denied; meter just won't show
+    }).catch((err) => {
+      // Ignorer silencieusement si l'utilisateur a refusé ou si c'est une erreur de permission
+      // Le meter ne s'affichera simplement pas
+      console.warn("Impossible d'accéder au microphone pour le meter:", err);
     });
   }
 
@@ -1813,6 +1818,16 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
   async function startRec() {
     try {
+      // Vérifier si on est dans une iframe et si les permissions sont disponibles
+      const isInIframe = window.self !== window.top;
+      
+      // Vérifier si getUserMedia est disponible
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setVoiceStatus("Microphone non disponible");
+        setRecording(false);
+        return;
+      }
+
       // Réinitialiser la transcription
       setVoiceTranscription("");
       
@@ -1860,10 +1875,28 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
         }
       };
       mr.start(250);
-    } catch (e) {
-      setVoiceStatus("Accès micro refusé");
+    } catch (e: any) {
+      console.error("Erreur accès microphone:", e);
       setRecording(false);
       stopMeter();
+      
+      // Messages d'erreur plus précis selon le type d'erreur
+      if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
+        const isInIframe = window.self !== window.top;
+        if (isInIframe) {
+          setVoiceStatus("Autorisation requise - Vérifiez les paramètres de l'iframe");
+        } else {
+          setVoiceStatus("Autorisation microphone refusée");
+        }
+      } else if (e.name === "NotFoundError" || e.name === "DevicesNotFoundError") {
+        setVoiceStatus("Aucun microphone détecté");
+      } else if (e.name === "NotReadableError" || e.name === "TrackStartError") {
+        setVoiceStatus("Microphone déjà utilisé");
+      } else if (e.name === "OverconstrainedError" || e.name === "ConstraintNotSatisfiedError") {
+        setVoiceStatus("Paramètres microphone non supportés");
+      } else {
+        setVoiceStatus("Erreur d'accès au microphone");
+      }
     }
   }
 
