@@ -237,7 +237,7 @@ function VoiceModeOverlay({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-white border-t border-gray-200 shadow-2xl h-screen"
+          className="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-white border-t border-gray-200 shadow-2xl h-[50vh] max-h-[50vh]"
           role="dialog"
           aria-label="Mode Voix"
           aria-modal="true"
