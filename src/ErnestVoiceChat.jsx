@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
-const N8N_WEBHOOK = import.meta.env.VITE_N8N_WEBHOOK
+const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook/ernest/voice'
+const N8N_WEBHOOK = import.meta.env.VITE_N8N_WEBHOOK || DEFAULT_N8N_WEBHOOK
 
 export default function ErnestVoiceChat() {
   const [sessionId] = useState(() => {
@@ -32,6 +33,15 @@ export default function ErnestVoiceChat() {
 
   const [files, setFiles] = useState([])
   const fileInputRef = useRef(null)
+
+  const hasTextInput = text.trim().length > 0
+  const hasAttachments = files.length > 0
+  const isVoiceActive = recording
+  const interactionLocked = sending || isThinking
+  const showMicButton = (!hasTextInput && !hasAttachments && !interactionLocked) || isVoiceActive
+  const showAttachButton = !isVoiceActive && !interactionLocked && !hasTextInput
+  const showTextComposer = !isVoiceActive && !hasAttachments
+  const showSendTextButton = !isVoiceActive && !hasAttachments
   
   useEffect(() => {
     if (answer && answer.trim()) {
@@ -385,65 +395,73 @@ export default function ErnestVoiceChat() {
           
           <div className="flex flex-1 items-end gap-3">
             {/* Bouton micro - agrandi pour seniors */}
-            <button
-              type="button"
-              onClick={handleToggleRecord}
-              className={`flex-shrink-0 inline-flex items-center justify-center gap-2 rounded-full p-4 text-lg font-semibold shadow-lg transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 min-w-[60px] min-h-[60px]
-                ${recording 
-                  ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-200' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}
-              aria-pressed={recording}
-              aria-label={recording ? 'Arrêter l\'enregistrement' : 'Commencer l\'enregistrement'}
-              title={recording ? 'Arrêter l\'enregistrement' : 'Parler'}
-            >
-              <span className="text-2xl">{recording ? '⏹️' : '🎤'}</span>
-            </button>
-
-            {/* Zone de saisie de texte */}
-            <div className="flex-1 relative">
-              <label htmlFor="message" className="sr-only">Votre message</label>
-              <textarea
-                id="message"
-                rows={1}
-                value={text}
-                onChange={(e) => {
-                  setText(e.target.value)
-                  // Auto-resize
-                  e.target.style.height = 'auto'
-                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
-                }}
-                placeholder="Écrivez votre message..."
-                className="w-full resize-none rounded-2xl border-2 border-gray-300 bg-white p-4 pr-16 leading-7 text-gray-900 shadow-sm outline-none ring-0 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                style={{ minHeight: '56px', maxHeight: '120px' }}
-              />
-              
-              {/* Bouton joindre fichiers - agrandi pour seniors */}
+            {showMicButton && (
               <button
                 type="button"
-                onClick={handleFileButtonClick}
-                className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full p-2.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 dark:hover:bg-gray-700 dark:hover:text-gray-300 min-w-[40px] min-h-[40px]"
-                aria-label="Joindre des fichiers"
-                title="Joindre des fichiers"
+                onClick={handleToggleRecord}
+                className={`flex-shrink-0 inline-flex items-center justify-center gap-2 rounded-full p-4 text-lg font-semibold shadow-lg transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 min-w-[60px] min-h-[60px]
+                  ${recording 
+                    ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-200' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}
+                aria-pressed={recording}
+                aria-label={recording ? 'Arrêter l\'enregistrement' : 'Commencer l\'enregistrement'}
+                title={recording ? 'Arrêter l\'enregistrement' : 'Parler'}
               >
-                <span className="text-xl">📎</span>
+                <span className="text-2xl">{recording ? '⏹️' : '🎤'}</span>
               </button>
-            </div>
+            )}
+
+            {/* Zone de saisie de texte */}
+            {showTextComposer && (
+              <div className="flex-1 relative">
+                <label htmlFor="message" className="sr-only">Votre message</label>
+                <textarea
+                  id="message"
+                  rows={1}
+                  value={text}
+                  onChange={(e) => {
+                    setText(e.target.value)
+                    // Auto-resize
+                    e.target.style.height = 'auto'
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+                  }}
+                  placeholder="Écrivez votre message..."
+                  className="w-full resize-none rounded-2xl border-2 border-gray-300 bg-white p-4 pr-16 leading-7 text-gray-900 shadow-sm outline-none ring-0 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                  style={{ minHeight: '56px', maxHeight: '120px' }}
+                />
+                
+                {/* Bouton joindre fichiers - agrandi pour seniors */}
+                {showAttachButton && (
+                  <button
+                    type="button"
+                    onClick={handleFileButtonClick}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full p-2.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 dark:hover:bg-gray-700 dark:hover:text-gray-300 min-w-[40px] min-h-[40px]"
+                    aria-label="Joindre des fichiers"
+                    title="Joindre des fichiers"
+                  >
+                    <span className="text-xl">📎</span>
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Bouton d'envoi principal - agrandi pour seniors */}
-            <button
-              type="submit"
-              disabled={!text.trim() || sending}
-              aria-busy={sending}
-              className="flex-shrink-0 inline-flex items-center justify-center rounded-full p-4 bg-blue-600 text-white shadow-lg transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 min-w-[60px] min-h-[60px]"
-              aria-label="Envoyer le message"
-              title="Envoyer"
-            >
-              {sending ? (
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-              ) : (
-                <span className="text-2xl">➤</span>
-              )}
-            </button>
+            {showSendTextButton && (
+              <button
+                type="submit"
+                disabled={!text.trim() || sending}
+                aria-busy={sending}
+                className="flex-shrink-0 inline-flex items-center justify-center rounded-full p-4 bg-blue-600 text-white shadow-lg transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 min-w-[60px] min-h-[60px]"
+                aria-label="Envoyer le message"
+                title="Envoyer"
+              >
+                {sending ? (
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                ) : (
+                  <span className="text-2xl">➤</span>
+                )}
+              </button>
+            )}
           </div>
         </form>
 

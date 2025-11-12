@@ -275,6 +275,24 @@ function VoiceModeOverlay({
             initial="hidden"
             animate="visible"
           >
+            {/* Message d'aide pour erreur iframe */}
+            {voiceStatus.includes("Iframe non autorisée") && (
+              <motion.div
+                className="w-full max-w-md mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="text-amber-900 text-[14px] md:text-[15px]">
+                  <p className="font-semibold mb-2">🔧 Configuration requise dans WeWeb :</p>
+                  <ol className="list-decimal list-inside space-y-1 text-[13px] md:text-[14px]">
+                    <li>Sélectionnez votre composant iframe</li>
+                    <li>Ajoutez l'attribut : <code className="bg-amber-100 px-1 rounded">allow="microphone"</code></li>
+                    <li>Rechargez la page</li>
+                  </ol>
+                </div>
+              </motion.div>
+            )}
             {/* Visualisation audio animée - Barres réactives avec cascades améliorées */}
             <div className="w-full max-w-md mb-6 md:mb-8">
               <div className="flex items-end justify-center gap-1 md:gap-1.5 h-24 md:h-32">
@@ -1884,14 +1902,14 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
         const isInIframe = window.self !== window.top;
         if (isInIframe) {
-          setVoiceStatus("Autorisation requise - Vérifiez les paramètres de l'iframe");
+          setVoiceStatus("⚠️ Iframe non autorisée - Ajoutez allow='microphone'");
         } else {
-          setVoiceStatus("Autorisation microphone refusée");
+          setVoiceStatus("Autorisation microphone refusée - Vérifiez les paramètres du navigateur");
         }
       } else if (e.name === "NotFoundError" || e.name === "DevicesNotFoundError") {
         setVoiceStatus("Aucun microphone détecté");
       } else if (e.name === "NotReadableError" || e.name === "TrackStartError") {
-        setVoiceStatus("Microphone déjà utilisé");
+        setVoiceStatus("Microphone déjà utilisé par une autre application");
       } else if (e.name === "OverconstrainedError" || e.name === "ConstraintNotSatisfiedError") {
         setVoiceStatus("Paramètres microphone non supportés");
       } else {

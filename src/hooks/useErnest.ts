@@ -20,35 +20,41 @@ function getWebhookUrl(override?: string): string {
 }
 
 function useStableSessionId(): string {
+  // Générer un nouveau sessionId à chaque chargement (pas de persistance)
   const [sessionId] = useState(() => {
-    let existing = localStorage.getItem(SESSION_KEY);
-    if (!existing) {
-      existing = crypto.randomUUID();
-      localStorage.setItem(SESSION_KEY, existing);
-    }
-    return existing;
+    return crypto.randomUUID();
   });
   return sessionId;
 }
 
+// Désactivé : pas de persistance de la conversation pour l'instant
 function persistState(state: ErnestState) {
-  localStorage.setItem(SESSION_KEY, state.sessionId);
-  localStorage.setItem(MESSAGES_KEY, JSON.stringify(state.messages));
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify(state.progress));
+  // localStorage.setItem(SESSION_KEY, state.sessionId);
+  // localStorage.setItem(MESSAGES_KEY, JSON.stringify(state.messages));
+  // localStorage.setItem(PROGRESS_KEY, JSON.stringify(state.progress));
 }
 
+// Désactivé : pas de restauration de la conversation
 function restoreState(defaultSessionId: string): ErnestState {
-  const messagesRaw = localStorage.getItem(MESSAGES_KEY);
-  const progressRaw = localStorage.getItem(PROGRESS_KEY);
-  let messages: ChatMessage[] = [];
-  let progress: string[] = [];
-  try {
-    messages = messagesRaw ? (JSON.parse(messagesRaw) as ChatMessage[]) : [];
-  } catch {}
-  try {
-    progress = progressRaw ? (JSON.parse(progressRaw) as string[]) : [];
-  } catch {}
-  return { sessionId: defaultSessionId, messages, progress };
+  // Nettoyer les données existantes dans le localStorage
+  localStorage.removeItem(MESSAGES_KEY);
+  localStorage.removeItem(PROGRESS_KEY);
+  
+  // Toujours retourner un état vide
+  return { sessionId: defaultSessionId, messages: [], progress: [] };
+  
+  // Code désactivé :
+  // const messagesRaw = localStorage.getItem(MESSAGES_KEY);
+  // const progressRaw = localStorage.getItem(PROGRESS_KEY);
+  // let messages: ChatMessage[] = [];
+  // let progress: string[] = [];
+  // try {
+  //   messages = messagesRaw ? (JSON.parse(messagesRaw) as ChatMessage[]) : [];
+  // } catch {}
+  // try {
+  //   progress = progressRaw ? (JSON.parse(progressRaw) as string[]) : [];
+  // } catch {}
+  // return { sessionId: defaultSessionId, messages, progress };
 }
 
 async function fetchWithTimeout(
@@ -118,10 +124,10 @@ export function useErnest(webhookOverride?: string): ErnestHookReturn {
     stateRef.current = { sessionId, messages, progress };
   }, [sessionId, messages, progress]);
 
-  // Persist whenever state changes
-  useEffect(() => {
-    persistState({ sessionId, messages, progress });
-  }, [sessionId, messages, progress]);
+  // Persist whenever state changes - DÉSACTIVÉ pour l'instant
+  // useEffect(() => {
+  //   persistState({ sessionId, messages, progress });
+  // }, [sessionId, messages, progress]);
 
   const appendMessage = useCallback((message: ChatMessage) => {
     setState((prev) => ({
@@ -146,7 +152,7 @@ export function useErnest(webhookOverride?: string): ErnestHookReturn {
 
   const reset = useCallback(() => {
     const newId = crypto.randomUUID();
-    localStorage.setItem(SESSION_KEY, newId);
+    // Nettoyer le localStorage si des données existent encore
     localStorage.removeItem(MESSAGES_KEY);
     localStorage.removeItem(PROGRESS_KEY);
     setState({ sessionId: newId, messages: [], progress: [] });

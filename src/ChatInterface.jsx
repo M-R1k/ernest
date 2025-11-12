@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 
 // Configuration de l'API N8N
-const N8N_WEBHOOK = import.meta.env.VITE_N8N_WEBHOOK
+const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook/ernest/voice'
+const N8N_WEBHOOK = import.meta.env.VITE_N8N_WEBHOOK || DEFAULT_N8N_WEBHOOK
 
 /**
  * Interface WYSIWYG de chatbot ultra-accessible dédiée aux seniors
@@ -56,6 +57,16 @@ export default function ChatInterface() {
   const speechSynthesis = useRef(null)
   const mrRef = useRef(null)
   const chunksRef = useRef([])
+
+  const hasTextInput = currentMessage.trim().length > 0
+  const hasAttachments = attachedFiles.length > 0
+  const isVoiceActive = isRecording
+  const interactionLocked = sending || isThinking
+  const showVoiceButton = (!hasTextInput && !hasAttachments && !interactionLocked) || isVoiceActive
+  const showAttachButton = !isVoiceActive && !interactionLocked && !hasTextInput
+  const showVoicePlaybackButton = voiceMode && !isVoiceActive && !hasAttachments && !interactionLocked && !hasTextInput
+  const showTextComposer = !isVoiceActive && !hasAttachments
+  const showSendTextButton = !isVoiceActive && !hasAttachments
   
   // Session ID pour l'API
   const [sessionId] = useState(() => {
@@ -653,24 +664,26 @@ export default function ChatInterface() {
           {/* Zone de saisie principale */}
           <div className="space-y-4">
             {/* Zone de texte */}
-            <div className="relative">
-              <textarea
-                ref={messageInputRef}
-                value={currentMessage}
-                onChange={(e) => setCurrentMessage(e.target.value)}
-                placeholder="Tapez votre message ici..."
-                className={`w-full p-4 rounded-xl border-2 resize-none focus:outline-none focus:ring-4 focus:ring-blue-300 ${fontSizeClasses[fontSize]} ${
-                  highContrast ? 'border-black' : 'border-gray-300'
-                }`}
-                rows={3}
-                disabled={isThinking || sending}
-              />
-              
-              {/* Compteur de caractères */}
-              <div className="absolute bottom-2 right-2 text-xs text-gray-500">
-                {currentMessage.length}/500
+            {showTextComposer && (
+              <div className="relative">
+                <textarea
+                  ref={messageInputRef}
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  placeholder="Tapez votre message ici..."
+                  className={`w-full p-4 rounded-xl border-2 resize-none focus:outline-none focus:ring-4 focus:ring-blue-300 ${fontSizeClasses[fontSize]} ${
+                    highContrast ? 'border-black' : 'border-gray-300'
+                  }`}
+                  rows={3}
+                  disabled={isThinking || sending}
+                />
+                
+                {/* Compteur de caractères */}
+                <div className="absolute bottom-2 right-2 text-xs text-gray-500">
+                  {currentMessage.length}/500
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Fichiers attachés */}
             {attachedFiles.length > 0 && (
@@ -696,26 +709,30 @@ export default function ChatInterface() {
             {/* Barre d'outils principale */}
             <div className="flex flex-wrap items-center gap-3">
               {/* Bouton microphone */}
-              <button
-                onClick={handleVoiceRecording}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                  isRecording 
-                    ? 'bg-red-500 text-white hover:bg-red-600' 
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                } ${fontSizeClasses[fontSize]}`}
-                disabled={isThinking || sending}
-              >
-                {isRecording ? '⏹️ Arrêter' : '🎤 Parler'}
-              </button>
+              {showVoiceButton && (
+                <button
+                  onClick={handleVoiceRecording}
+                  className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                    isRecording 
+                      ? 'bg-red-500 text-white hover:bg-red-600' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  } ${fontSizeClasses[fontSize]}`}
+                  disabled={isThinking || sending}
+                >
+                  {isRecording ? '⏹️ Arrêter' : '🎤 Parler'}
+                </button>
+              )}
 
               {/* Bouton ajout de fichiers */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className={`px-6 py-3 rounded-xl font-semibold bg-gray-500 text-white hover:bg-gray-600 transition-all ${fontSizeClasses[fontSize]}`}
-                disabled={isThinking || sending}
-              >
-                 Joindre
-              </button>
+              {showAttachButton && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`px-6 py-3 rounded-xl font-semibold bg-gray-500 text-white hover:bg-gray-600 transition-all ${fontSizeClasses[fontSize]}`}
+                  disabled={isThinking || sending}
+                >
+                   Joindre
+                </button>
+              )}
               
               <input
                 ref={fileInputRef}
@@ -727,7 +744,7 @@ export default function ChatInterface() {
               />
 
               {/* Bouton lecture vocale */}
-              {voiceMode && (
+              {showVoicePlaybackButton && (
                 <button
                   onClick={isSpeaking ? stopSpeaking : () => speakText(currentMessage)}
                   className={`px-6 py-3 rounded-xl font-semibold transition-all ${
@@ -742,17 +759,19 @@ export default function ChatInterface() {
               )}
 
               {/* Bouton d'envoi principal */}
-              <button
-                onClick={handleSendMessage}
-                disabled={!currentMessage.trim() || isThinking || sending}
-                className={`px-8 py-3 rounded-xl font-bold transition-all ${
-                  currentMessage.trim() && !isThinking && !sending
-                    ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                } ${fontSizeClasses[fontSize]}`}
-              >
-                {isThinking || sending ? '⏳' : '➤'} Envoyer
-              </button>
+              {showSendTextButton && (
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!currentMessage.trim() || isThinking || sending}
+                  className={`px-8 py-3 rounded-xl font-bold transition-all ${
+                    currentMessage.trim() && !isThinking && !sending
+                      ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  } ${fontSizeClasses[fontSize]}`}
+                >
+                  {isThinking || sending ? '⏳' : '➤'} Envoyer
+                </button>
+              )}
 
               {/* Bouton envoi de fichiers */}
               {attachedFiles.length > 0 && (
