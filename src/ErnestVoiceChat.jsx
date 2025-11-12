@@ -90,33 +90,67 @@ export default function ErnestVoiceChat() {
   }
 
   async function startRec() {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mimeType = pickMime();
-    chunksRef.current = [];
-
-    const mr = new MediaRecorder(stream, { mimeType });
-    mrRef.current = mr;
-    setRecording(true);
-    setStatus("Enregistrement…");
-
-    mr.ondataavailable = (e) => {
-      if (e.data && e.data.size) chunksRef.current.push(e.data);
-    };
-    mr.onstop = async () => {
-      try {
-        const blob = new Blob(chunksRef.current, { type: mimeType });
-        chunksRef.current = [];
-        await sendAudio(blob);
-      } catch (e) {
-        console.error(e);
-        setStatus("Erreur d\'envoi");
-      } finally {
-        stream.getTracks().forEach((t) => t.stop());
-        setRecording(false);
+    try {
+      // Vérifier si l'API est disponible
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Votre navigateur ne supporte pas l\'enregistrement audio. Veuillez utiliser un navigateur moderne.');
       }
-    };
 
-    mr.start(250);
+      // Demander l'accès au microphone avec gestion d'erreurs améliorée
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      const mimeType = pickMime();
+      chunksRef.current = [];
+
+      const mr = new MediaRecorder(stream, { mimeType });
+      mrRef.current = mr;
+      setRecording(true);
+      setStatus("Enregistrement…");
+
+      mr.ondataavailable = (e) => {
+        if (e.data && e.data.size) chunksRef.current.push(e.data);
+      };
+      mr.onstop = async () => {
+        try {
+          const blob = new Blob(chunksRef.current, { type: mimeType });
+          chunksRef.current = [];
+          await sendAudio(blob);
+        } catch (e) {
+          console.error(e);
+          setStatus("Erreur d\'envoi");
+        } finally {
+          stream.getTracks().forEach((t) => t.stop());
+          setRecording(false);
+        }
+      };
+
+      mr.start(250);
+    } catch (error) {
+      // Gestion améliorée des erreurs de permission
+      let errorMessage = 'Erreur d\'accès au microphone';
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage = 'Permission refusée. Veuillez autoriser l\'accès au microphone dans les paramètres de votre navigateur.';
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage = 'Aucun microphone trouvé. Vérifiez que votre appareil possède un microphone.';
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage = 'Le microphone est déjà utilisé par une autre application.';
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage = 'Les paramètres audio demandés ne sont pas supportés.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setStatus(errorMessage);
+      setRecording(false);
+      throw error;
+    }
   }
 
   function stopRec() {
@@ -220,7 +254,7 @@ export default function ErnestVoiceChat() {
       }
     } catch (e) {
       console.error(e)
-      setStatus('Erreur micro')
+      // Le message d'erreur est déjà défini dans startRec()
       setRecording(false)
     }
   }

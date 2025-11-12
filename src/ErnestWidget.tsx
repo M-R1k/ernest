@@ -1557,7 +1557,13 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       return;
     }
-    navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: false } }).then((stream) => {
+    navigator.mediaDevices.getUserMedia({ 
+      audio: { 
+        noiseSuppression: true, 
+        echoCancellation: true, 
+        autoGainControl: true 
+      } 
+    }).then((stream) => {
       meterStreamRef.current = stream;
       const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioCtx();
@@ -1841,7 +1847,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       
       // Vérifier si getUserMedia est disponible
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setVoiceStatus("Microphone non disponible");
+        setVoiceStatus("Votre navigateur ne supporte pas l'enregistrement audio. Veuillez utiliser un navigateur moderne.");
         setRecording(false);
         return;
       }
@@ -1849,7 +1855,14 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       // Réinitialiser la transcription
       setVoiceTranscription("");
       
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Demander l'accès au microphone avec paramètres optimisés pour mobile
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
       const mimeType = pickMime();
       chunksRef.current = [];
       const mr = new MediaRecorder(stream, { mimeType });
