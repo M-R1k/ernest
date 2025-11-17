@@ -532,7 +532,7 @@ const ALL_INTENTS: Array<{ key: Intent; label: string; icon: string }> = [
   { key: "SECURE_ACCOUNTS", label: "Je sécurise mes comptes en ligne", icon: "🔐" },
   { key: "CHECK_SCAM", label: "Je vérifie si c’est une arnaque", icon: "🕵️" },
   { key: "SECURE_DEVICE", label: "Je sécurise mes appareils", icon: "📱" },
-  { key: "AWARENESS", label: "Je me sensibilise à la cybersécurité", icon: "💡" },
+  { key: "AWARENESS", label: "Je me sensibilise au cyberharcèlement", icon: "💡" },
   { key: "SAFE_BROWSING", label: "Je veux naviguer en sécurité", icon: "🌐" },
   { key: "SOS", label: "J’ai besoin d’aide", icon: "🆘" },
 ];
@@ -587,10 +587,10 @@ const NON_SOS_FLOWS: Record<ActionableIntent, StepDef[]> = {
     {
       question: "Que voulez-vous apprendre ?",
       choices: [
-        { value: "good_habits", label: "Les bons réflexes à adopter" },
-        { value: "mistakes_to_avoid", label: "Les erreurs à éviter" },
-        { value: "understand_scams", label: "Mieux comprendre les arnaques" },
-        { value: "quiz", label: "Petit quiz pour s’entraîner" },
+        { value: "report_content", label: "Signaler ou supprimer un contenu" },
+        { value: "help_victim", label: "Aider une personne harcelée" },
+        { value: "recognize_harassment", label: "Reconnaître le cyberharcèlement" },
+        { value: "how_to_react", label: "Savoir comment réagir" },
       ],
     },
   ],

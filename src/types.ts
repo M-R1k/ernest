@@ -37,10 +37,10 @@ export type SubIntent =
   | "device_slow"
   | "device_lost"
   // AWARENESS
-  | "good_habits"
-  | "mistakes_to_avoid"
-  | "understand_scams"
-  | "quiz"
+  | "report_content"
+  | "help_victim"
+  | "recognize_harassment"
+  | "how_to_react"
   // SAFE_BROWSING
   | "verify_site"
   | "public_wifi"
