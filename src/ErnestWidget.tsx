@@ -772,6 +772,38 @@ function UserAvatar({
   );
 }
 
+// Composant Avatar pour le chatbot (Ernest)
+function BotAvatar() {
+  return (
+    <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-300 flex items-center justify-center shadow-md ring-2 ring-white relative">
+      <svg 
+        className="w-5 h-5 md:w-6 md:h-6" 
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-label="Ernest"
+      >
+        {/* Grande étoile centrale (4 pointes) */}
+        <path 
+          d="M12 3L13.5 9.5L20 11L13.5 12.5L12 19L10.5 12.5L4 11L10.5 9.5L12 3Z" 
+          fill="white" 
+        />
+        {/* Petite étoile en haut à droite */}
+        <path 
+          d="M17 5L17.3 6.5L18.5 7L17.3 7.5L17 9L16.7 7.5L15.5 7L16.7 6.5L17 5Z" 
+          fill="white" 
+          opacity="0.6"
+        />
+        {/* Petite étoile en bas à gauche */}
+        <path 
+          d="M7 17L7.3 18.5L8.5 19L7.3 19.5L7 21L6.7 19.5L5.5 19L6.7 18.5L7 17Z" 
+          fill="white" 
+          opacity="0.6"
+        />
+      </svg>
+    </div>
+  );
+}
+
 function Bubble({
   role,
   children,
@@ -889,6 +921,16 @@ function Bubble({
       <div className="flex items-end gap-2 md:gap-3 ml-auto max-w-[85%] md:max-w-[75%]">
         {bubbleContent}
         <UserAvatar profileImage={profileImage} name={userName} />
+      </div>
+    );
+  }
+
+  // Si c'est un message assistant, on affiche l'avatar du bot
+  if (!isUser) {
+    return (
+      <div className="flex items-end gap-2 md:gap-3 mr-auto max-w-[85%] md:max-w-[75%]">
+        <BotAvatar />
+        {bubbleContent}
       </div>
     );
   }
@@ -2120,7 +2162,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
       {/* Boutons juste au-dessus de l'input (bas de page) */}
       <div className="px-3 md:px-6">
-        {screen === "home" && (
+        {screen === "home" && composerText.length === 0 && conversation.length === 0 && attachedFiles.length === 0 && (
           <div className="mx-auto mb-2 md:mb-3 mt-16 md:mt-20 w-full max-w-screen-sm md:max-w-screen-md">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-2.5">
               {ALL_INTENTS.map((i) => (
