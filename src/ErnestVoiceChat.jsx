@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook/ernest/voice'
+const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook-test/ernest/voice'
 const N8N_WEBHOOK = import.meta.env.VITE_N8N_WEBHOOK || DEFAULT_N8N_WEBHOOK
 
 export default function ErnestVoiceChat() {

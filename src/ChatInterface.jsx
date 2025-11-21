@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 
 // Configuration de l'API N8N
-const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook/ernest/voice'
+const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook-test/ernest/voice'
 const N8N_WEBHOOK = import.meta.env.VITE_N8N_WEBHOOK || DEFAULT_N8N_WEBHOOK
 
 /**
@@ -545,7 +545,7 @@ export default function ChatInterface() {
               <button
                 onClick={() => setSimplifiedMode(!simplifiedMode)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  simplifiedMode ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700'
+                  simplifiedMode ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-900'
                 }`}
                 aria-pressed={simplifiedMode}
               >
@@ -556,7 +556,7 @@ export default function ChatInterface() {
               <button
                 onClick={() => setVoiceMode(!voiceMode)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  voiceMode ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'
+                  voiceMode ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-900'
                 }`}
                 aria-pressed={voiceMode}
               >
@@ -567,7 +567,7 @@ export default function ChatInterface() {
               <button
                 onClick={() => setHighContrast(!highContrast)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  highContrast ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'
+                  highContrast ? 'bg-black text-white' : 'bg-gray-200 text-gray-900'
                 }`}
                 aria-pressed={highContrast}
               >
@@ -652,13 +652,13 @@ export default function ChatInterface() {
           {!simplifiedMode && (
             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Formatage:</span>
+                <span className="text-sm font-medium text-gray-900">Formatage:</span>
                 
                 {/* Boutons de formatage */}
                 <button
                   onClick={() => toggleTextFormat('bold')}
                   className={`px-3 py-2 rounded-lg font-bold transition-colors ${
-                    textFormat.bold ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+                    textFormat.bold ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'
                   }`}
                   aria-pressed={textFormat.bold}
                 >
@@ -668,7 +668,7 @@ export default function ChatInterface() {
                 <button
                   onClick={() => toggleTextFormat('italic')}
                   className={`px-3 py-2 rounded-lg italic transition-colors ${
-                    textFormat.italic ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+                    textFormat.italic ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'
                   }`}
                   aria-pressed={textFormat.italic}
                 >
@@ -678,7 +678,7 @@ export default function ChatInterface() {
                 <button
                   onClick={() => toggleTextFormat('underline')}
                   className={`px-3 py-2 rounded-lg underline transition-colors ${
-                    textFormat.underline ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+                    textFormat.underline ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'
                   }`}
                   aria-pressed={textFormat.underline}
                 >
