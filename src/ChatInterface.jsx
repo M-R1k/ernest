@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Sparkles } from 'lucide-react'
 
 // Configuration de l'API N8N
 const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook-test/ernest/voice'
@@ -62,7 +63,8 @@ export default function ChatInterface() {
   const hasAttachments = attachedFiles.length > 0
   const isVoiceActive = isRecording
   const interactionLocked = sending || isThinking
-  const showVoiceButton = (!hasTextInput && !hasAttachments && !interactionLocked) || isVoiceActive
+  // Le bouton micro est toujours visible (sauf si interaction verrouillée), pour permettre de passer au mode vocal même avec du texte
+  const showVoiceButton = !interactionLocked || isVoiceActive
   const showAttachButton = !isVoiceActive && !interactionLocked && !hasTextInput
   const showVoicePlaybackButton = voiceMode && !isVoiceActive && !hasAttachments && !interactionLocked && !hasTextInput
   const showTextComposer = !isVoiceActive && !hasAttachments
@@ -222,6 +224,11 @@ export default function ChatInterface() {
       setStatus('Prêt')
     } else {
       // Démarrer l'enregistrement
+      // Si du texte ou des fichiers sont présents, on les efface pour passer en mode vocal
+      if (hasTextInput || hasAttachments) {
+        setCurrentMessage('')
+        setAttachedFiles([])
+      }
       try {
         await startRec()
         setIsRecording(true)
@@ -244,20 +251,33 @@ export default function ChatInterface() {
       }
 
       // Demander l'accès au microphone avec gestion d'erreurs améliorée
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      });
+      // Essayons d'abord avec les paramètres optimisés, puis sans si erreur
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          } 
+        });
+      } catch (e) {
+        // Si les paramètres audio ne sont pas supportés, réessayons sans contraintes
+        if (e.name === 'OverconstrainedError') {
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: true
+          });
+        } else {
+          throw e;
+        }
+      }
       
       const mimeType = pickMime();
       chunksRef.current = [];
 
       const mr = new MediaRecorder(stream, { mimeType });
       mrRef.current = mr;
-      setRecording(true);
+      setIsRecording(true);
       setStatus("Enregistrement…");
 
       mr.ondataavailable = (e) => {
@@ -510,8 +530,9 @@ export default function ChatInterface() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Titre principal */}
             <div className="flex items-center gap-3">
-              <h1 className={`text-2xl lg:text-3xl font-bold ${fontSizeClasses[fontSize]}`}>
-                🤖 Assistant Ernest
+              <h1 className={`flex items-center gap-2 text-2xl lg:text-3xl font-bold ${fontSizeClasses[fontSize]}`}>
+                <Sparkles className="w-7 h-7 lg:w-8 lg:h-8" />
+                Assistant Ernest
               </h1>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                 isThinking ? 'bg-yellow-100 text-yellow-800' : 
@@ -545,7 +566,7 @@ export default function ChatInterface() {
               <button
                 onClick={() => setSimplifiedMode(!simplifiedMode)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  simplifiedMode ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-900'
+                  simplifiedMode ? 'bg-yellow-500 text-white' : 'bg-gray-200 !text-gray-900'
                 }`}
                 aria-pressed={simplifiedMode}
               >
@@ -556,7 +577,7 @@ export default function ChatInterface() {
               <button
                 onClick={() => setVoiceMode(!voiceMode)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  voiceMode ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-900'
+                  voiceMode ? 'bg-green-500 text-white' : 'bg-gray-200 !text-gray-900'
                 }`}
                 aria-pressed={voiceMode}
               >
@@ -567,7 +588,7 @@ export default function ChatInterface() {
               <button
                 onClick={() => setHighContrast(!highContrast)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  highContrast ? 'bg-black text-white' : 'bg-gray-200 text-gray-900'
+                  highContrast ? 'bg-black text-white' : 'bg-gray-200 !text-gray-900'
                 }`}
                 aria-pressed={highContrast}
               >
@@ -652,13 +673,13 @@ export default function ChatInterface() {
           {!simplifiedMode && (
             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-medium text-gray-900">Formatage:</span>
+                <span className="text-sm font-medium !text-gray-900">Formatage:</span>
                 
                 {/* Boutons de formatage */}
                 <button
                   onClick={() => toggleTextFormat('bold')}
                   className={`px-3 py-2 rounded-lg font-bold transition-colors ${
-                    textFormat.bold ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'
+                    textFormat.bold ? 'bg-blue-500 text-white' : 'bg-gray-200 !text-gray-900'
                   }`}
                   aria-pressed={textFormat.bold}
                 >
@@ -668,7 +689,7 @@ export default function ChatInterface() {
                 <button
                   onClick={() => toggleTextFormat('italic')}
                   className={`px-3 py-2 rounded-lg italic transition-colors ${
-                    textFormat.italic ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'
+                    textFormat.italic ? 'bg-blue-500 text-white' : 'bg-gray-200 !text-gray-900'
                   }`}
                   aria-pressed={textFormat.italic}
                 >
@@ -678,7 +699,7 @@ export default function ChatInterface() {
                 <button
                   onClick={() => toggleTextFormat('underline')}
                   className={`px-3 py-2 rounded-lg underline transition-colors ${
-                    textFormat.underline ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'
+                    textFormat.underline ? 'bg-blue-500 text-white' : 'bg-gray-200 !text-gray-900'
                   }`}
                   aria-pressed={textFormat.underline}
                 >
