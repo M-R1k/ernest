@@ -1394,18 +1394,63 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     voiceModeRef.current = voiceMode;
   }, [voiceMode]);
 
-  // Démarrer automatiquement l'enregistrement quand le mode voix s'ouvre
-  useEffect(() => {
-    if (voiceMode && !recording) {
-      // Attendre un court délai pour que l'overlay soit complètement ouvert
-      const timer = setTimeout(() => {
-        startRec();
-      }, 300); // 300ms pour laisser l'animation de l'overlay se terminer
-      
-      return () => clearTimeout(timer);
+  // Fonction pour demander l'autorisation puis ouvrir le mode voix
+  const handleVoiceClick = useCallback(async () => {
+    // Vérifier si getUserMedia est disponible
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setVoiceMode(true);
+      setVoiceStatus("Votre navigateur ne supporte pas l'enregistrement audio. Veuillez utiliser un navigateur moderne.");
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [voiceMode, recording]); // startRec est stable, pas besoin de l'ajouter aux dépendances
+
+    try {
+      // Demander d'abord l'autorisation du micro
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      // Fermer le stream immédiatement, on le recréera dans startRec
+      stream.getTracks().forEach(track => track.stop());
+      
+      // Autorisation accordée : ouvrir l'overlay
+      setVoiceMode(true);
+      setVoiceStatus("Prêt");
+      
+      // Démarrer l'enregistrement après un court délai pour laisser l'overlay s'ouvrir
+      setTimeout(() => {
+        startRec();
+      }, 300);
+      
+      emitTelemetry({ type: "voice_open", intent: intent || undefined, subIntent: subIntent || undefined, step: stepIndex });
+    } catch (e: any) {
+      console.error("Erreur accès microphone:", e);
+      
+      // Autorisation refusée : ouvrir quand même l'overlay avec un message d'erreur
+      setVoiceMode(true);
+      
+      // Messages d'erreur plus précis selon le type d'erreur
+      if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
+        const isInIframe = window.self !== window.top;
+        if (isInIframe) {
+          setVoiceStatus("⚠️ Iframe non autorisée - Ajoutez allow='microphone'");
+        } else {
+          setVoiceStatus("Autorisation microphone refusée - Vérifiez les paramètres du navigateur");
+        }
+      } else if (e.name === "NotFoundError" || e.name === "DevicesNotFoundError") {
+        setVoiceStatus("Aucun microphone détecté");
+      } else if (e.name === "NotReadableError" || e.name === "TrackStartError") {
+        setVoiceStatus("Microphone déjà utilisé par une autre application");
+      } else if (e.name === "OverconstrainedError" || e.name === "ConstraintNotSatisfiedError") {
+        setVoiceStatus("Paramètres microphone non supportés");
+      } else {
+        setVoiceStatus("Erreur d'accès au microphone");
+      }
+    }
+  }, [intent, subIntent, stepIndex]);
 
   // Ref pour stocker la transcription actuelle (pour accès dans les callbacks)
   const voiceTranscriptionRef = useRef("");
@@ -2378,10 +2423,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           sendAction({ intent: effectiveIntent, subIntent: effectiveSub, step: effectiveStep, text: msg });
           setComposerText("");
         }}
-        onVoice={() => {
-          setVoiceMode(true);
-          emitTelemetry({ type: "voice_open", intent: intent || undefined, subIntent: subIntent || undefined, step: stepIndex });
-        }}
+        onVoice={handleVoiceClick}
         onFileAttach={(files) => {
           setAttachedFiles((prev) => [...prev, ...files]);
         }}
