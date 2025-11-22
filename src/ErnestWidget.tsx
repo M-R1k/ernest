@@ -1941,10 +1941,23 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
   async function startRec() {
     try {
-      // Vérifier si on est dans une iframe et si les permissions sont disponibles
+      // Vérifier si on est dans une iframe (WeWeb)
       const isInIframe = window.self !== window.top;
       
-      // Détecter Safari (Safari bloque souvent l'accès au microphone dans les iframes)
+      // Si on est dans une iframe, on NE DOIT PAS utiliser getUserMedia ici
+      // La permission doit être gérée par le parent (WeWeb)
+      if (isInIframe) {
+        console.log("⚠️ Détection iframe : on ne peut pas utiliser getUserMedia dans l'iframe");
+        console.log("ℹ️ La permission micro doit être gérée par WeWeb (parent)");
+        setVoiceStatus("⚠️ Mode voix dans iframe : la permission micro doit être gérée par WeWeb");
+        setRecording(false);
+        return;
+      }
+      
+      // Si on n'est PAS dans une iframe (app standalone), on peut utiliser getUserMedia normalement
+      console.log("✅ Mode standalone : utilisation normale de getUserMedia");
+      
+      // Détecter Safari
       const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
                        (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome'));
       
@@ -1954,36 +1967,12 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
         setRecording(false);
         return;
       }
-      
-      // Avertissement spécifique pour Safari dans une iframe
-      if (isSafari && isInIframe) {
-        console.warn("⚠️ Safari détecté dans une iframe - l'accès au microphone peut être bloqué");
-      }
-
-      // Vérifier la Permissions Policy si on est dans une iframe (pour information seulement)
-      // On ne bloque PAS car la vérification peut être incorrecte même si la permission est autorisée
-      if (isInIframe) {
-        try {
-          // Vérifier si on peut accéder à la Permissions Policy (pour logging seulement)
-          const policy = (document as any).featurePolicy || (document as any).permissionsPolicy;
-          if (policy) {
-            const microphoneAllowed = policy.allowsFeature('microphone');
-            console.log("🔍 Permissions Policy - microphone autorisé:", microphoneAllowed);
-            if (!microphoneAllowed) {
-              console.warn("⚠️ Permissions Policy indique 'false', mais on essaie quand même getUserMedia (la vérification peut être incorrecte)");
-            }
-          }
-        } catch (e) {
-          console.log("ℹ️ Impossible de vérifier la Permissions Policy:", e);
-        }
-      }
 
       // Réinitialiser la transcription
       setVoiceTranscription("");
       
       // Vérifier d'abord si la permission est déjà accordée (via l'API Permissions)
       // Note: On ne bloque PAS si l'API dit "denied" car getUserMedia peut quand même fonctionner
-      // L'API Permissions peut être obsolète ou incorrecte
       let permissionStatus: PermissionState | null = null;
       try {
         if (navigator.permissions && navigator.permissions.query) {
@@ -1991,31 +1980,19 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           permissionStatus = result.state;
           console.log("🔍 État de la permission micro (API Permissions):", permissionStatus);
           
-          // On ne bloque PAS si "denied" - on essaie quand même getUserMedia
-          // car l'utilisateur peut avoir autorisé dans les paramètres après
           if (permissionStatus === "denied") {
-            console.warn("⚠️ API Permissions indique 'denied', mais on essaie quand même getUserMedia (l'utilisateur peut avoir autorisé dans les paramètres)");
+            console.warn("⚠️ API Permissions indique 'denied', mais on essaie quand même getUserMedia");
           }
         }
       } catch (e) {
-        // L'API Permissions n'est pas disponible ou ne supporte pas 'microphone'
         console.log("ℹ️ API Permissions non disponible, on continue avec getUserMedia...");
       }
       
-      // Demander l'accès au microphone dans l'iframe
-      // Même si WeWeb a déjà demandé la permission, l'iframe doit aussi la demander
-      // (c'est normal - chaque contexte doit demander séparément)
+      // Demander l'accès au microphone (seulement en mode standalone)
       let stream: MediaStream;
       
       try {
-        // Demander le stream (le navigateur peut redemander la permission même si WeWeb l'a déjà demandée)
-        // C'est normal et attendu dans une iframe
-        console.log("🎤 Demande d'accès au microphone dans l'iframe...");
-        console.log("📍 Contexte:", {
-          isInIframe: window.self !== window.top,
-          hasMediaDevices: !!navigator.mediaDevices,
-          hasGetUserMedia: !!navigator.mediaDevices?.getUserMedia
-        });
+        console.log("🎤 Demande d'accès au microphone (mode standalone)...");
         
         // Essayer d'abord avec les contraintes optimisées
         try {
@@ -2036,12 +2013,11 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
             });
             console.log("✅ Stream audio obtenu sans contraintes");
           } else {
-            // Relancer l'erreur si ce n'est pas une erreur de contraintes
             throw constraintError;
           }
         }
         
-        console.log("✅ Stream audio obtenu avec succès dans l'iframe");
+        console.log("✅ Stream audio obtenu avec succès");
         console.log("📊 Stream tracks:", stream.getTracks().length);
       } catch (e: any) {
         console.error("❌ Erreur lors de l'obtention du stream:", e);
