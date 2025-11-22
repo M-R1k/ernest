@@ -1192,7 +1192,7 @@ function Composer({
       )}
 
       {/* Zone de saisie et boutons */}
-      <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md items-center gap-2.5 md:gap-4 rounded-full bg-gray-100 px-4 md:px-6 py-3 md:py-4.5 text-gray-700">
+      <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md items-center gap-2.5 md:gap-4 rounded-full bg-gray-100 px-3 md:px-5 py-2 md:py-3.5 text-gray-700">
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -1202,7 +1202,7 @@ function Composer({
           }}
           placeholder="Posez votre question"
           aria-label="Posez votre question"
-          className="flex-1 bg-transparent text-[17px] md:text-[20px] outline-none placeholder:text-gray-500 min-h-[44px] md:min-h-[48px]"
+          className="flex-1 bg-transparent text-[15px] md:text-[18px] outline-none placeholder:text-gray-500"
         />
         <input
           ref={fileInputRef}
@@ -1336,41 +1336,6 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
   useEffect(() => {
     if (composerText.length > 0) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [composerText]);
-
-  // Écouter les messages depuis WeWeb pour ouvrir le mode voix (Option B)
-  useEffect(() => {
-    function handleVoiceMessage(event: MessageEvent) {
-      // Message pour ouvrir le mode voix (après que WeWeb ait demandé l'autorisation micro)
-      if (event.data?.type === "open_voice_mode") {
-        console.log("Ouverture du mode voix depuis WeWeb");
-        
-        // Ouvrir l'overlay mode voix
-        setVoiceMode(true);
-        setVoiceStatus("Prêt");
-        
-        // Démarrer automatiquement l'enregistrement après un court délai
-        // pour laisser l'overlay s'ouvrir (la permission micro a déjà été accordée par WeWeb)
-        setTimeout(() => {
-          startRec();
-        }, 300);
-        
-        emitTelemetry({ 
-          type: "voice_open_from_weweb", 
-          intent: intent || undefined, 
-          subIntent: subIntent || undefined, 
-          step: stepIndex 
-        });
-      }
-    }
-
-    // Ajouter l'écouteur d'événements
-    window.addEventListener("message", handleVoiceMessage);
-
-    // Nettoyer l'écouteur à la destruction du composant
-    return () => {
-      window.removeEventListener("message", handleVoiceMessage);
-    };
-  }, [intent, subIntent, stepIndex]); // Dépendances pour le telemetry
 
   // Pas de message d'intro par défaut
 
