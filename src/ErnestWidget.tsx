@@ -1944,17 +1944,28 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       // Vérifier si on est dans une iframe et si les permissions sont disponibles
       const isInIframe = window.self !== window.top;
       
+      // Détecter Safari (Safari bloque souvent l'accès au microphone dans les iframes)
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
+                       (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome'));
+      
       // Vérifier si getUserMedia est disponible
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setVoiceStatus("Votre navigateur ne supporte pas l'enregistrement audio. Veuillez utiliser un navigateur moderne.");
         setRecording(false);
         return;
       }
+      
+      // Avertissement spécifique pour Safari dans une iframe
+      if (isSafari && isInIframe) {
+        console.warn("⚠️ Safari détecté dans une iframe - l'accès au microphone peut être bloqué");
+      }
 
       // Réinitialiser la transcription
       setVoiceTranscription("");
       
       // Vérifier d'abord si la permission est déjà accordée (via l'API Permissions)
+      // Note: On ne bloque PAS si l'API dit "denied" car getUserMedia peut quand même fonctionner
+      // L'API Permissions peut être obsolète ou incorrecte
       let permissionStatus: PermissionState | null = null;
       try {
         if (navigator.permissions && navigator.permissions.query) {
@@ -1962,12 +1973,10 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           permissionStatus = result.state;
           console.log("🔍 État de la permission micro (API Permissions):", permissionStatus);
           
-          // Si la permission est déjà refusée de manière permanente, informer l'utilisateur
+          // On ne bloque PAS si "denied" - on essaie quand même getUserMedia
+          // car l'utilisateur peut avoir autorisé dans les paramètres après
           if (permissionStatus === "denied") {
-            console.warn("⚠️ Permission micro refusée de manière permanente selon l'API Permissions");
-            setVoiceStatus("⚠️ Permission micro refusée. Cliquez sur l'icône 🔒 dans la barre d'adresse et autorisez le microphone, puis rechargez la page.");
-            setRecording(false);
-            return;
+            console.warn("⚠️ API Permissions indique 'denied', mais on essaie quand même getUserMedia (l'utilisateur peut avoir autorisé dans les paramètres)");
           }
         }
       } catch (e) {
@@ -2029,9 +2038,25 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
         if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
           // Message plus détaillé pour aider l'utilisateur
           const isInIframe = window.self !== window.top;
-          console.error("🚫 Permission refusée - isInIframe:", isInIframe);
+          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
+                           (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome'));
           
-          // Vérifier si on peut obtenir plus d'informations
+          console.error("🚫 Permission refusée - isInIframe:", isInIframe, "isSafari:", isSafari);
+          
+          // Message spécifique pour Safari dans une iframe
+          if (isSafari && isInIframe) {
+            let safariMessage = "⚠️ Safari bloque l'accès au microphone dans les iframes.\n\n";
+            safariMessage += "Solutions :\n";
+            safariMessage += "1. Utilisez Chrome ou Firefox\n";
+            safariMessage += "2. Ou ouvrez l'application directement (sans iframe)\n";
+            safariMessage += "3. Ou autorisez le microphone dans Réglages > Safari > Microphone";
+            
+            setVoiceStatus(safariMessage);
+            setRecording(false);
+            return;
+          }
+          
+          // Message générique pour les autres navigateurs
           let helpMessage = "⚠️ Permission micro refusée dans l'iframe.\n\n";
           helpMessage += "Pour résoudre ce problème :\n";
           helpMessage += "1. Cliquez sur l'icône 🔒 dans la barre d'adresse\n";
