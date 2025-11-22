@@ -1967,12 +1967,14 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
         console.log("API Permissions non disponible, on continue...");
       }
       
-      // Si la permission a déjà été accordée par WeWeb, essayer d'utiliser getUserMedia
-      // Le navigateur devrait se souvenir de la permission et ne pas redemander
+      // Demander l'accès au microphone dans l'iframe
+      // Même si WeWeb a déjà demandé la permission, l'iframe doit aussi la demander
+      // (c'est normal - chaque contexte doit demander séparément)
       let stream: MediaStream;
       
       try {
-        // Essayer d'obtenir le stream (si la permission est déjà accordée, pas de popup)
+        // Demander le stream (le navigateur peut redemander la permission même si WeWeb l'a déjà demandée)
+        // C'est normal et attendu dans une iframe
         stream = await navigator.mediaDevices.getUserMedia({ 
           audio: {
             echoCancellation: true,
@@ -1980,16 +1982,29 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
             autoGainControl: true
           } 
         });
-        console.log("Stream audio obtenu avec succès");
+        console.log("✅ Stream audio obtenu avec succès dans l'iframe");
       } catch (e: any) {
-        console.error("Erreur lors de l'obtention du stream:", e);
-        // Si erreur de permission, vérifier si WeWeb avait dit que c'était accordé
-        if (permissionGrantedRef.current && (e.name === "NotAllowedError" || e.name === "PermissionDeniedError")) {
-          setVoiceStatus("⚠️ Permission micro nécessaire - L'iframe doit aussi avoir la permission. Vérifiez que l'attribut allow='microphone' est présent sur l'iframe.");
+        console.error("❌ Erreur lors de l'obtention du stream:", e);
+        
+        // Gérer les différents types d'erreurs
+        if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
+          setVoiceStatus("⚠️ Permission micro refusée - Veuillez autoriser l'accès au microphone dans les paramètres du navigateur.");
+          setRecording(false);
+          return;
+        } else if (e.name === "NotFoundError" || e.name === "DevicesNotFoundError") {
+          setVoiceStatus("Aucun microphone détecté");
+          setRecording(false);
+          return;
+        } else if (e.name === "NotReadableError" || e.name === "TrackStartError") {
+          setVoiceStatus("Microphone déjà utilisé par une autre application");
+          setRecording(false);
+          return;
+        } else {
+          // Autre erreur
+          setVoiceStatus(`Erreur d'accès au microphone: ${e.message || e.name}`);
           setRecording(false);
           return;
         }
-        throw e; // Relancer l'erreur si ce n'est pas une erreur de permission
       }
       const mimeType = pickMime();
       chunksRef.current = [];
