@@ -1300,6 +1300,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
   const intentRef = useRef<Intent | null>(null);
   const subIntentRef = useRef<Exclude<SubIntent, null> | null>(null);
   const stepIndexRef = useRef<number>(0);
+  const permissionGrantedRef = useRef<boolean>(false); // Indicateur que WeWeb a déjà accordé la permission
 
   // Mapping texte libre → intent/subIntent (heuristique simple)
   function mapTextToMeta(text: string): { intent: Intent; subIntent?: Exclude<SubIntent, null> } | null {
@@ -1346,6 +1347,9 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       // Message pour ouvrir le mode voix (après que WeWeb ait demandé l'autorisation micro)
       if (event.data?.type === "open_voice_mode") {
         console.log("Ouverture du mode voix depuis WeWeb");
+        
+        // Marquer que la permission a été accordée par WeWeb
+        permissionGrantedRef.current = true;
         
         // Ouvrir l'overlay mode voix
         setVoiceMode(true);
@@ -1950,14 +1954,43 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       // Réinitialiser la transcription
       setVoiceTranscription("");
       
-      // Demander l'accès au microphone avec paramètres optimisés pour mobile
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      });
+      // Vérifier d'abord si la permission est déjà accordée (via l'API Permissions)
+      let permissionStatus: PermissionState | null = null;
+      try {
+        if (navigator.permissions && navigator.permissions.query) {
+          const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          permissionStatus = result.state;
+          console.log("État de la permission micro:", permissionStatus);
+        }
+      } catch (e) {
+        // L'API Permissions n'est pas disponible ou ne supporte pas 'microphone'
+        console.log("API Permissions non disponible, on continue...");
+      }
+      
+      // Si la permission a déjà été accordée par WeWeb, essayer d'utiliser getUserMedia
+      // Le navigateur devrait se souvenir de la permission et ne pas redemander
+      let stream: MediaStream;
+      
+      try {
+        // Essayer d'obtenir le stream (si la permission est déjà accordée, pas de popup)
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          } 
+        });
+        console.log("Stream audio obtenu avec succès");
+      } catch (e: any) {
+        console.error("Erreur lors de l'obtention du stream:", e);
+        // Si erreur de permission, vérifier si WeWeb avait dit que c'était accordé
+        if (permissionGrantedRef.current && (e.name === "NotAllowedError" || e.name === "PermissionDeniedError")) {
+          setVoiceStatus("⚠️ Permission micro nécessaire - L'iframe doit aussi avoir la permission. Vérifiez que l'attribut allow='microphone' est présent sur l'iframe.");
+          setRecording(false);
+          return;
+        }
+        throw e; // Relancer l'erreur si ce n'est pas une erreur de permission
+      }
       const mimeType = pickMime();
       chunksRef.current = [];
       const mr = new MediaRecorder(stream, { mimeType });
