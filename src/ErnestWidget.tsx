@@ -1346,7 +1346,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     function handleVoiceMessage(event: MessageEvent) {
       // Message pour ouvrir le mode voix (après que WeWeb ait demandé l'autorisation micro)
       if (event.data?.type === "open_voice_mode") {
-        console.log("Ouverture du mode voix depuis WeWeb");
+        console.log("✅ Ouverture du mode voix depuis WeWeb - permission accordée");
         
         // Marquer que la permission a été accordée par WeWeb
         permissionGrantedRef.current = true;
@@ -2406,8 +2406,39 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           setComposerText("");
         }}
         onVoice={() => {
-          setVoiceMode(true);
-          emitTelemetry({ type: "voice_open", intent: intent || undefined, subIntent: subIntent || undefined, step: stepIndex });
+          // Envoyer un message au parent (WeWeb) pour demander la permission micro
+          // Le parent gérera la permission et renverra "open_voice_mode" à React
+          console.log("Demande de permission micro envoyée au parent (WeWeb)");
+          
+          try {
+            // Essayer d'envoyer au parent
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage(
+                { type: "request_mic_permission" },
+                "*"
+              );
+            } else {
+              // Si on n'est pas dans une iframe, ouvrir directement le mode voix
+              console.log("Pas dans une iframe, ouverture directe du mode voix");
+              setVoiceMode(true);
+              emitTelemetry({ 
+                type: "voice_open", 
+                intent: intent || undefined, 
+                subIntent: subIntent || undefined, 
+                step: stepIndex 
+              });
+            }
+          } catch (e) {
+            console.error("Erreur lors de l'envoi du message au parent:", e);
+            // Fallback : ouvrir directement le mode voix
+            setVoiceMode(true);
+            emitTelemetry({ 
+              type: "voice_open", 
+              intent: intent || undefined, 
+              subIntent: subIntent || undefined, 
+              step: stepIndex 
+            });
+          }
         }}
         onFileAttach={(files) => {
           setAttachedFiles((prev) => [...prev, ...files]);
