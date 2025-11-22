@@ -1960,19 +1960,17 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
         console.warn("⚠️ Safari détecté dans une iframe - l'accès au microphone peut être bloqué");
       }
 
-      // Vérifier la Permissions Policy si on est dans une iframe
+      // Vérifier la Permissions Policy si on est dans une iframe (pour information seulement)
+      // On ne bloque PAS car la vérification peut être incorrecte même si la permission est autorisée
       if (isInIframe) {
         try {
-          // Vérifier si on peut accéder à la Permissions Policy
+          // Vérifier si on peut accéder à la Permissions Policy (pour logging seulement)
           const policy = (document as any).featurePolicy || (document as any).permissionsPolicy;
           if (policy) {
             const microphoneAllowed = policy.allowsFeature('microphone');
             console.log("🔍 Permissions Policy - microphone autorisé:", microphoneAllowed);
             if (!microphoneAllowed) {
-              console.error("❌ Permissions Policy bloque le microphone dans cette iframe");
-              setVoiceStatus("⚠️ Permissions Policy bloque l'accès au microphone.\n\nDans WeWeb, vérifiez que l'iframe a bien l'attribut allow='microphone' et que la page parent n'a pas de Permissions Policy qui bloque.");
-              setRecording(false);
-              return;
+              console.warn("⚠️ Permissions Policy indique 'false', mais on essaie quand même getUserMedia (la vérification peut être incorrecte)");
             }
           }
         } catch (e) {
