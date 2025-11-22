@@ -1960,11 +1960,19 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
         if (navigator.permissions && navigator.permissions.query) {
           const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
           permissionStatus = result.state;
-          console.log("État de la permission micro:", permissionStatus);
+          console.log("🔍 État de la permission micro (API Permissions):", permissionStatus);
+          
+          // Si la permission est déjà refusée de manière permanente, informer l'utilisateur
+          if (permissionStatus === "denied") {
+            console.warn("⚠️ Permission micro refusée de manière permanente selon l'API Permissions");
+            setVoiceStatus("⚠️ Permission micro refusée. Cliquez sur l'icône 🔒 dans la barre d'adresse et autorisez le microphone, puis rechargez la page.");
+            setRecording(false);
+            return;
+          }
         }
       } catch (e) {
         // L'API Permissions n'est pas disponible ou ne supporte pas 'microphone'
-        console.log("API Permissions non disponible, on continue...");
+        console.log("ℹ️ API Permissions non disponible, on continue avec getUserMedia...");
       }
       
       // Demander l'accès au microphone dans l'iframe
@@ -1975,28 +1983,71 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       try {
         // Demander le stream (le navigateur peut redemander la permission même si WeWeb l'a déjà demandée)
         // C'est normal et attendu dans une iframe
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          } 
+        console.log("🎤 Demande d'accès au microphone dans l'iframe...");
+        console.log("📍 Contexte:", {
+          isInIframe: window.self !== window.top,
+          hasMediaDevices: !!navigator.mediaDevices,
+          hasGetUserMedia: !!navigator.mediaDevices?.getUserMedia
         });
+        
+        // Essayer d'abord avec les contraintes optimisées
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            } 
+          });
+          console.log("✅ Stream audio obtenu avec contraintes optimisées");
+        } catch (constraintError: any) {
+          // Si les contraintes ne sont pas supportées, essayer sans contraintes
+          if (constraintError.name === "OverconstrainedError" || constraintError.name === "ConstraintNotSatisfiedError") {
+            console.log("⚠️ Contraintes audio non supportées, essai sans contraintes...");
+            stream = await navigator.mediaDevices.getUserMedia({ 
+              audio: true
+            });
+            console.log("✅ Stream audio obtenu sans contraintes");
+          } else {
+            // Relancer l'erreur si ce n'est pas une erreur de contraintes
+            throw constraintError;
+          }
+        }
+        
         console.log("✅ Stream audio obtenu avec succès dans l'iframe");
+        console.log("📊 Stream tracks:", stream.getTracks().length);
       } catch (e: any) {
         console.error("❌ Erreur lors de l'obtention du stream:", e);
+        console.error("📋 Détails de l'erreur:", {
+          name: e.name,
+          message: e.message,
+          constraint: e.constraint,
+          stack: e.stack
+        });
         
-        // Gérer les différents types d'erreurs
+        // Gérer les différents types d'erreurs avec des messages plus clairs
         if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
-          setVoiceStatus("⚠️ Permission micro refusée - Veuillez autoriser l'accès au microphone dans les paramètres du navigateur.");
+          // Message plus détaillé pour aider l'utilisateur
+          const isInIframe = window.self !== window.top;
+          console.error("🚫 Permission refusée - isInIframe:", isInIframe);
+          
+          // Vérifier si on peut obtenir plus d'informations
+          let helpMessage = "⚠️ Permission micro refusée dans l'iframe.\n\n";
+          helpMessage += "Pour résoudre ce problème :\n";
+          helpMessage += "1. Cliquez sur l'icône 🔒 dans la barre d'adresse\n";
+          helpMessage += "2. Trouvez 'Microphone' et changez à 'Autoriser'\n";
+          helpMessage += "3. Rechargez la page (F5)\n";
+          helpMessage += "4. Réessayez";
+          
+          setVoiceStatus(helpMessage);
           setRecording(false);
           return;
         } else if (e.name === "NotFoundError" || e.name === "DevicesNotFoundError") {
-          setVoiceStatus("Aucun microphone détecté");
+          setVoiceStatus("Aucun microphone détecté sur votre appareil");
           setRecording(false);
           return;
         } else if (e.name === "NotReadableError" || e.name === "TrackStartError") {
-          setVoiceStatus("Microphone déjà utilisé par une autre application");
+          setVoiceStatus("Microphone déjà utilisé par une autre application. Fermez les autres applications qui utilisent le micro.");
           setRecording(false);
           return;
         } else {
