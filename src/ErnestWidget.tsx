@@ -1337,39 +1337,28 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     if (composerText.length > 0) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [composerText]);
 
-  // Écouter les messages vocaux depuis WeWeb (Option B)
+  // Écouter les messages depuis WeWeb pour ouvrir le mode voix (Option B)
   useEffect(() => {
     function handleVoiceMessage(event: MessageEvent) {
-      // Vérifier que c'est bien un message de type voice_input depuis WeWeb
-      if (event.data?.type === "voice_input" && event.data?.text) {
-        const text = event.data.text.trim();
+      // Message pour ouvrir le mode voix (après que WeWeb ait demandé l'autorisation micro)
+      if (event.data?.type === "open_voice_mode") {
+        console.log("Ouverture du mode voix depuis WeWeb");
         
-        if (!text || text.length === 0) {
-          console.warn("Message vocal reçu mais texte vide");
-          return;
-        }
-
-        console.log("Texte reçu depuis WeWeb :", text);
-
-        // Mapping texte → intent/subIntent (même logique que sendTranscription)
-        const mapped = mapTextToMeta(text);
-        const effectiveIntent: Intent = mapped?.intent || ("fallback" as Intent);
-        const effectiveSub: Exclude<SubIntent, null> | undefined = mapped?.subIntent || undefined;
-        const effectiveStep = stepIndex > 0 ? stepIndex : 1;
-
-        // Envoyer le texte via sendAction (workflow n8n)
+        // Ouvrir l'overlay mode voix
+        setVoiceMode(true);
+        setVoiceStatus("Prêt");
+        
+        // Démarrer automatiquement l'enregistrement après un court délai
+        // pour laisser l'overlay s'ouvrir (la permission micro a déjà été accordée par WeWeb)
+        setTimeout(() => {
+          startRec();
+        }, 300);
+        
         emitTelemetry({ 
-          type: "voice_input_from_weweb", 
-          intent: effectiveIntent || undefined, 
-          subIntent: effectiveSub || undefined, 
+          type: "voice_open_from_weweb", 
+          intent: intent || undefined, 
+          subIntent: subIntent || undefined, 
           step: stepIndex 
-        });
-        
-        sendAction({ 
-          intent: effectiveIntent, 
-          subIntent: effectiveSub, 
-          step: effectiveStep, 
-          text: text 
         });
       }
     }
@@ -1381,7 +1370,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     return () => {
       window.removeEventListener("message", handleVoiceMessage);
     };
-  }, [sendAction, stepIndex]); // Dépendances : sendAction et stepIndex pour le mapping
+  }, [intent, subIntent, stepIndex]); // Dépendances pour le telemetry
 
   // Pas de message d'intro par défaut
 
@@ -1393,64 +1382,6 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
   useEffect(() => {
     voiceModeRef.current = voiceMode;
   }, [voiceMode]);
-
-  // Fonction pour demander l'autorisation puis ouvrir le mode voix
-  const handleVoiceClick = useCallback(async () => {
-    // Vérifier si getUserMedia est disponible
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setVoiceMode(true);
-      setVoiceStatus("Votre navigateur ne supporte pas l'enregistrement audio. Veuillez utiliser un navigateur moderne.");
-      return;
-    }
-
-    try {
-      // Demander d'abord l'autorisation du micro
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      });
-      
-      // Fermer le stream immédiatement, on le recréera dans startRec
-      stream.getTracks().forEach(track => track.stop());
-      
-      // Autorisation accordée : ouvrir l'overlay
-      setVoiceMode(true);
-      setVoiceStatus("Prêt");
-      
-      // Démarrer l'enregistrement après un court délai pour laisser l'overlay s'ouvrir
-      setTimeout(() => {
-        startRec();
-      }, 300);
-      
-      emitTelemetry({ type: "voice_open", intent: intent || undefined, subIntent: subIntent || undefined, step: stepIndex });
-    } catch (e: any) {
-      console.error("Erreur accès microphone:", e);
-      
-      // Autorisation refusée : ouvrir quand même l'overlay avec un message d'erreur
-      setVoiceMode(true);
-      
-      // Messages d'erreur plus précis selon le type d'erreur
-      if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
-        const isInIframe = window.self !== window.top;
-        if (isInIframe) {
-          setVoiceStatus("⚠️ Iframe non autorisée - Ajoutez allow='microphone'");
-        } else {
-          setVoiceStatus("Autorisation microphone refusée - Vérifiez les paramètres du navigateur");
-        }
-      } else if (e.name === "NotFoundError" || e.name === "DevicesNotFoundError") {
-        setVoiceStatus("Aucun microphone détecté");
-      } else if (e.name === "NotReadableError" || e.name === "TrackStartError") {
-        setVoiceStatus("Microphone déjà utilisé par une autre application");
-      } else if (e.name === "OverconstrainedError" || e.name === "ConstraintNotSatisfiedError") {
-        setVoiceStatus("Paramètres microphone non supportés");
-      } else {
-        setVoiceStatus("Erreur d'accès au microphone");
-      }
-    }
-  }, [intent, subIntent, stepIndex]);
 
   // Ref pour stocker la transcription actuelle (pour accès dans les callbacks)
   const voiceTranscriptionRef = useRef("");
@@ -2423,7 +2354,10 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           sendAction({ intent: effectiveIntent, subIntent: effectiveSub, step: effectiveStep, text: msg });
           setComposerText("");
         }}
-        onVoice={handleVoiceClick}
+        onVoice={() => {
+          setVoiceMode(true);
+          emitTelemetry({ type: "voice_open", intent: intent || undefined, subIntent: subIntent || undefined, step: stepIndex });
+        }}
         onFileAttach={(files) => {
           setAttachedFiles((prev) => [...prev, ...files]);
         }}
