@@ -2043,6 +2043,25 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           
           console.error("🚫 Permission refusée - isInIframe:", isInIframe, "isSafari:", isSafari);
           
+          // Vérifier si c'est une erreur de Permissions Policy
+          const isPermissionsPolicyError = e.message?.includes("Permissions policy") || 
+                                          e.message?.includes("not allowed in this document") ||
+                                          e.message?.includes("Feature Policy");
+          
+          if (isPermissionsPolicyError || (isInIframe && e.message?.includes("Permission denied"))) {
+            // Erreur de Permissions Policy - l'attribut allow="microphone" n'est pas correctement configuré
+            let policyMessage = "⚠️ Permissions Policy bloque l'accès au microphone.\n\n";
+            policyMessage += "Dans WeWeb, vérifiez que l'iframe a bien :\n";
+            policyMessage += "• allow='microphone'\n";
+            policyMessage += "• Ou allow='microphone *'\n";
+            policyMessage += "• Dans les attributs HTML de l'iframe\n\n";
+            policyMessage += "Si c'est déjà configuré, rechargez la page.";
+            
+            setVoiceStatus(policyMessage);
+            setRecording(false);
+            return;
+          }
+          
           // Message spécifique pour Safari dans une iframe
           if (isSafari && isInIframe) {
             let safariMessage = "⚠️ Safari bloque l'accès au microphone dans les iframes.\n\n";
