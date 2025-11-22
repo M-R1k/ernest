@@ -619,13 +619,18 @@ export default function ChatInterface() {
                 className={`max-w-[80%] p-4 rounded-2xl shadow-sm ${
                   message.from === 'user'
                     ? `${colorScheme.primary} text-white`
-                    : `${colorScheme.secondary} ${colorScheme.border}`
+                    : `bg-gray-800 text-white ${colorScheme.border}`
                 }`}
               >
-                <div className="whitespace-pre-wrap leading-relaxed">
-                  {message.text}
+                <div className="whitespace-pre-wrap leading-relaxed flex items-start gap-2">
+                  {message.from === 'bot' && (
+                    <Sparkles className="w-5 h-5 mt-0.5 flex-shrink-0 text-white" />
+                  )}
+                  <span>{message.text}</span>
                 </div>
-                <div className="text-xs opacity-70 mt-2">
+                <div className={`text-xs opacity-70 mt-2 ${
+                  message.from === 'bot' ? 'text-gray-300' : ''
+                }`}>
                   {message.timestamp.toLocaleTimeString('fr-FR', { 
                     hour: '2-digit', 
                     minute: '2-digit' 
@@ -649,13 +654,14 @@ export default function ChatInterface() {
           {/* Indicateur de réflexion */}
           {isThinking && (
             <div className="flex justify-start">
-              <div className={`p-4 rounded-2xl ${colorScheme.secondary} ${colorScheme.border}`}>
+              <div className={`p-4 rounded-2xl bg-gray-800 text-white ${colorScheme.border}`}>
                 <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 flex-shrink-0 text-white" />
                   <span>Ernest réfléchit</span>
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce opacity-70"></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce opacity-70" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce opacity-70" style={{animationDelay: '0.2s'}}></div>
                   </div>
                 </div>
               </div>
@@ -666,20 +672,87 @@ export default function ChatInterface() {
         </div>
       </main>
 
-      {/* Barre d'outils WYSIWYG unifiée */}
-      <footer className={`${colorScheme.background} ${colorScheme.border} border-t-2 p-4 shadow-lg`}>
+      {/* Barre d'outils WYSIWYG unifiée - Version Senior Friendly */}
+      <footer className={`${colorScheme.background} ${colorScheme.border} border-t-2 p-4 md:p-6 shadow-lg`}>
         <div className="max-w-6xl mx-auto">
-          {/* Barre d'outils de formatage */}
-          {!simplifiedMode && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-medium !text-gray-900">Formatage:</span>
+          {/* Zone de texte principale - Plus grande et visible */}
+          {showTextComposer && (
+            <div className="relative mb-4">
+              <label htmlFor="message-input" className="block text-base md:text-lg font-semibold mb-2 !text-gray-900">
+                Votre message :
+              </label>
+              <textarea
+                id="message-input"
+                ref={messageInputRef}
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                placeholder="Tapez votre message ici..."
+                className={`w-full p-5 md:p-6 rounded-xl border-3 resize-none focus:outline-none focus:ring-4 focus:ring-blue-400 ${fontSizeClasses[fontSize] || 'text-lg'} ${
+                  highContrast ? 'border-black' : 'border-gray-400'
+                } min-h-[120px] md:min-h-[140px]`}
+                rows={4}
+                disabled={isThinking || sending}
+              />
+              
+              {/* Compteur de caractères - Plus visible */}
+              <div className={`absolute bottom-3 right-3 text-sm md:text-base font-medium ${
+                currentMessage.length > 450 ? 'text-red-600' : 'text-gray-600'
+              }`}>
+                {currentMessage.length}/500
+              </div>
+            </div>
+          )}
+
+          {/* Fichiers attachés - Plus visible */}
+          {attachedFiles.length > 0 && (
+            <div className="mb-4 p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base md:text-lg font-semibold !text-gray-900">📎 Fichiers joints :</span>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {attachedFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 px-4 py-3 bg-blue-100 text-blue-900 rounded-lg border border-blue-300"
+                  >
+                    <span className={`text-base md:text-lg font-medium ${fontSizeClasses[fontSize]}`}>📎 {file.name}</span>
+                    <button
+                      onClick={() => removeFile(index)}
+                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-lg font-bold min-w-[44px] min-h-[44px] flex items-center justify-center"
+                      aria-label={`Supprimer ${file.name}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {attachedFiles.length > 0 && (
+                <button
+                  onClick={sendFiles}
+                  disabled={!attachedFiles.length || sending}
+                  className={`mt-4 w-full px-6 py-4 rounded-xl font-bold transition-all text-lg md:text-xl min-h-[60px] ${
+                    attachedFiles.length && !sending
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  ⬆️ Envoyer les fichiers ({attachedFiles.length})
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Barre d'outils de formatage - Plus accessible */}
+          {!simplifiedMode && showTextComposer && (
+            <div className="mb-4 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className={`text-base md:text-lg font-semibold !text-gray-900 ${fontSizeClasses[fontSize]}`}>Formatage :</span>
                 
-                {/* Boutons de formatage */}
+                {/* Boutons de formatage - Plus grands */}
                 <button
                   onClick={() => toggleTextFormat('bold')}
-                  className={`px-3 py-2 rounded-lg font-bold transition-colors ${
-                    textFormat.bold ? 'bg-blue-500 text-white' : 'bg-gray-200 !text-gray-900'
+                  className={`px-5 py-3 rounded-xl font-bold transition-colors min-w-[56px] min-h-[56px] text-lg ${
+                    textFormat.bold ? 'bg-blue-600 text-white' : 'bg-gray-300 !text-gray-900'
                   }`}
                   aria-pressed={textFormat.bold}
                 >
@@ -688,8 +761,8 @@ export default function ChatInterface() {
                 
                 <button
                   onClick={() => toggleTextFormat('italic')}
-                  className={`px-3 py-2 rounded-lg italic transition-colors ${
-                    textFormat.italic ? 'bg-blue-500 text-white' : 'bg-gray-200 !text-gray-900'
+                  className={`px-5 py-3 rounded-xl italic transition-colors min-w-[56px] min-h-[56px] text-lg ${
+                    textFormat.italic ? 'bg-blue-600 text-white' : 'bg-gray-300 !text-gray-900'
                   }`}
                   aria-pressed={textFormat.italic}
                 >
@@ -698,8 +771,8 @@ export default function ChatInterface() {
                 
                 <button
                   onClick={() => toggleTextFormat('underline')}
-                  className={`px-3 py-2 rounded-lg underline transition-colors ${
-                    textFormat.underline ? 'bg-blue-500 text-white' : 'bg-gray-200 !text-gray-900'
+                  className={`px-5 py-3 rounded-xl underline transition-colors min-w-[56px] min-h-[56px] text-lg ${
+                    textFormat.underline ? 'bg-blue-600 text-white' : 'bg-gray-300 !text-gray-900'
                   }`}
                   aria-pressed={textFormat.underline}
                 >
@@ -708,84 +781,59 @@ export default function ChatInterface() {
 
                 <button
                   onClick={applyFormatting}
-                  className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-semibold text-base md:text-lg min-h-[56px]"
                 >
-                  Appliquer
+                  Appliquer le formatage
                 </button>
               </div>
             </div>
           )}
 
-          {/* Zone de saisie principale */}
+          {/* Boutons principaux - Disposition senior-friendly */}
           <div className="space-y-4">
-            {/* Zone de texte */}
-            {showTextComposer && (
-              <div className="relative">
-                <textarea
-                  ref={messageInputRef}
-                  value={currentMessage}
-                  onChange={(e) => setCurrentMessage(e.target.value)}
-                  placeholder="Tapez votre message ici..."
-                  className={`w-full p-4 rounded-xl border-2 resize-none focus:outline-none focus:ring-4 focus:ring-blue-300 ${fontSizeClasses[fontSize]} ${
-                    highContrast ? 'border-black' : 'border-gray-300'
-                  }`}
-                  rows={3}
-                  disabled={isThinking || sending}
-                />
-                
-                {/* Compteur de caractères */}
-                <div className="absolute bottom-2 right-2 text-xs text-gray-500">
-                  {currentMessage.length}/500
-                </div>
-              </div>
-            )}
-
-            {/* Fichiers attachés */}
-            {attachedFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {attachedFiles.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-800 rounded-lg"
-                  >
-                    <span className="text-sm">📎 {file.name}</span>
-                    <button
-                      onClick={() => removeFile(index)}
-                      className="text-red-500 hover:text-red-700"
-                      aria-label={`Supprimer ${file.name}`}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Barre d'outils principale */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Bouton microphone */}
+            {/* Première ligne : Boutons principaux (Parler / Envoyer) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Bouton microphone - Plus grand et visible */}
               {showVoiceButton && (
                 <button
                   onClick={handleVoiceRecording}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                  className={`w-full px-8 py-5 md:py-6 rounded-xl font-bold transition-all text-xl md:text-2xl min-h-[70px] shadow-lg ${
                     isRecording 
-                      ? 'bg-red-500 text-white hover:bg-red-600' 
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  } ${fontSizeClasses[fontSize]}`}
+                      ? 'bg-red-600 text-white hover:bg-red-700 animate-pulse' 
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  } ${fontSizeClasses[fontSize] || 'text-xl'}`}
                   disabled={isThinking || sending}
                 >
-                  {isRecording ? '⏹️ Arrêter' : '🎤 Parler'}
+                  {isRecording ? '⏹️ Arrêter l\'enregistrement' : '🎤 Parler au lieu d\'écrire'}
                 </button>
               )}
 
+              {/* Bouton d'envoi principal - Plus grand */}
+              {showSendTextButton && (
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!currentMessage.trim() || isThinking || sending}
+                  className={`w-full px-8 py-5 md:py-6 rounded-xl font-bold transition-all text-xl md:text-2xl min-h-[70px] shadow-lg ${
+                    currentMessage.trim() && !isThinking && !sending
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  } ${fontSizeClasses[fontSize] || 'text-xl'}`}
+                >
+                  {isThinking || sending ? '⏳ Envoi en cours...' : '➤ Envoyer le message'}
+                </button>
+              )}
+            </div>
+
+            {/* Deuxième ligne : Boutons secondaires */}
+            <div className="flex flex-wrap gap-4 justify-center">
               {/* Bouton ajout de fichiers */}
               {showAttachButton && (
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className={`px-6 py-3 rounded-xl font-semibold bg-gray-500 text-white hover:bg-gray-600 transition-all ${fontSizeClasses[fontSize]}`}
+                  className={`px-6 md:px-8 py-4 md:py-5 rounded-xl font-semibold bg-gray-600 text-white hover:bg-gray-700 transition-all text-lg md:text-xl min-h-[60px] shadow-md ${fontSizeClasses[fontSize] || 'text-lg'}`}
                   disabled={isThinking || sending}
                 >
-                   Joindre
+                  📎 Joindre un fichier
                 </button>
               )}
               
@@ -802,59 +850,44 @@ export default function ChatInterface() {
               {showVoicePlaybackButton && (
                 <button
                   onClick={isSpeaking ? stopSpeaking : () => speakText(currentMessage)}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                  className={`px-6 md:px-8 py-4 md:py-5 rounded-xl font-semibold transition-all text-lg md:text-xl min-h-[60px] shadow-md ${
                     isSpeaking 
-                      ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                      : 'bg-green-500 text-white hover:bg-green-600'
-                  } ${fontSizeClasses[fontSize]}`}
+                      ? 'bg-orange-600 text-white hover:bg-orange-700' 
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  } ${fontSizeClasses[fontSize] || 'text-lg'}`}
                   disabled={!currentMessage.trim() || isThinking || sending}
                 >
-                  {isSpeaking ? '⏸️ Pause' : '🔊 Lire'}
-                </button>
-              )}
-
-              {/* Bouton d'envoi principal */}
-              {showSendTextButton && (
-                <button
-                  onClick={handleSendMessage}
-                  disabled={!currentMessage.trim() || isThinking || sending}
-                  className={`px-8 py-3 rounded-xl font-bold transition-all ${
-                    currentMessage.trim() && !isThinking && !sending
-                      ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  } ${fontSizeClasses[fontSize]}`}
-                >
-                  {isThinking || sending ? '⏳' : '➤'} Envoyer
-                </button>
-              )}
-
-              {/* Bouton envoi de fichiers */}
-              {attachedFiles.length > 0 && (
-                <button
-                  onClick={sendFiles}
-                  disabled={!attachedFiles.length || sending}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                    attachedFiles.length && !sending
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  } ${fontSizeClasses[fontSize]}`}
-                >
-                  ⬆️ Envoyer fichiers
+                  {isSpeaking ? '⏸️ Pause de la lecture' : '🔊 Lire le message à voix haute'}
                 </button>
               )}
             </div>
+          </div>
 
-            {/* Instructions d'aide */}
-            <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-              <strong>💡 Conseils d'utilisation :</strong>
-              <ul className="mt-1 space-y-1">
-                <li>• Cliquez sur le micro pour parler au lieu d'écrire</li>
-                <li>• Utilisez le mode simple pour une interface plus claire</li>
-                <li>• Activez la voix pour entendre les réponses</li>
-                <li>• Ajustez la taille du texte selon vos besoins</li>
-                <li>• Joignez des fichiers si nécessaire</li>
-              </ul>
-            </div>
+          {/* Instructions d'aide - Plus visible */}
+          <div className={`mt-6 p-5 bg-blue-50 rounded-xl border-2 border-blue-200 ${fontSizeClasses[fontSize] || 'text-base'}`}>
+            <strong className="text-lg md:text-xl !text-gray-900 font-bold block mb-3">💡 Conseils d'utilisation :</strong>
+            <ul className="space-y-2 text-gray-700">
+              <li className="flex items-start gap-2">
+                <span className="text-xl">•</span>
+                <span>Cliquez sur le bouton <strong>"Parler"</strong> pour parler au lieu d'écrire</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-xl">•</span>
+                <span>Utilisez le bouton <strong>"Mode Simple"</strong> en haut pour une interface plus claire</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-xl">•</span>
+                <span>Activez le bouton <strong>"Voix"</strong> pour entendre les réponses automatiquement</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-xl">•</span>
+                <span>Ajustez la taille du texte avec le menu en haut selon vos besoins</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-xl">•</span>
+                <span>Vous pouvez joindre des fichiers (photos, documents) si nécessaire</span>
+              </li>
+            </ul>
           </div>
         </div>
       </footer>

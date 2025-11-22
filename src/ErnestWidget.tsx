@@ -1192,7 +1192,7 @@ function Composer({
       )}
 
       {/* Zone de saisie et boutons */}
-      <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md items-center gap-2.5 md:gap-4 rounded-full bg-gray-100 px-3 md:px-5 py-2 md:py-3.5 text-gray-700">
+      <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md items-center gap-2.5 md:gap-4 rounded-full bg-gray-100 px-4 md:px-6 py-3 md:py-4.5 text-gray-700">
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -1202,7 +1202,7 @@ function Composer({
           }}
           placeholder="Posez votre question"
           aria-label="Posez votre question"
-          className="flex-1 bg-transparent text-[15px] md:text-[18px] outline-none placeholder:text-gray-500"
+          className="flex-1 bg-transparent text-[17px] md:text-[20px] outline-none placeholder:text-gray-500 min-h-[44px] md:min-h-[48px]"
         />
         <input
           ref={fileInputRef}
@@ -1337,6 +1337,52 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     if (composerText.length > 0) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [composerText]);
 
+  // Écouter les messages vocaux depuis WeWeb (Option B)
+  useEffect(() => {
+    function handleVoiceMessage(event: MessageEvent) {
+      // Vérifier que c'est bien un message de type voice_input depuis WeWeb
+      if (event.data?.type === "voice_input" && event.data?.text) {
+        const text = event.data.text.trim();
+        
+        if (!text || text.length === 0) {
+          console.warn("Message vocal reçu mais texte vide");
+          return;
+        }
+
+        console.log("Texte reçu depuis WeWeb :", text);
+
+        // Mapping texte → intent/subIntent (même logique que sendTranscription)
+        const mapped = mapTextToMeta(text);
+        const effectiveIntent: Intent = mapped?.intent || ("fallback" as Intent);
+        const effectiveSub: Exclude<SubIntent, null> | undefined = mapped?.subIntent || undefined;
+        const effectiveStep = stepIndex > 0 ? stepIndex : 1;
+
+        // Envoyer le texte via sendAction (workflow n8n)
+        emitTelemetry({ 
+          type: "voice_input_from_weweb", 
+          intent: effectiveIntent || undefined, 
+          subIntent: effectiveSub || undefined, 
+          step: stepIndex 
+        });
+        
+        sendAction({ 
+          intent: effectiveIntent, 
+          subIntent: effectiveSub, 
+          step: effectiveStep, 
+          text: text 
+        });
+      }
+    }
+
+    // Ajouter l'écouteur d'événements
+    window.addEventListener("message", handleVoiceMessage);
+
+    // Nettoyer l'écouteur à la destruction du composant
+    return () => {
+      window.removeEventListener("message", handleVoiceMessage);
+    };
+  }, [sendAction, stepIndex]); // Dépendances : sendAction et stepIndex pour le mapping
+
   // Pas de message d'intro par défaut
 
   // Mettre à jour les refs quand les valeurs changent
@@ -1347,6 +1393,19 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
   useEffect(() => {
     voiceModeRef.current = voiceMode;
   }, [voiceMode]);
+
+  // Démarrer automatiquement l'enregistrement quand le mode voix s'ouvre
+  useEffect(() => {
+    if (voiceMode && !recording) {
+      // Attendre un court délai pour que l'overlay soit complètement ouvert
+      const timer = setTimeout(() => {
+        startRec();
+      }, 300); // 300ms pour laisser l'animation de l'overlay se terminer
+      
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceMode, recording]); // startRec est stable, pas besoin de l'ajouter aux dépendances
 
   // Ref pour stocker la transcription actuelle (pour accès dans les callbacks)
   const voiceTranscriptionRef = useRef("");
