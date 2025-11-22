@@ -1297,6 +1297,9 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
   const audioCtxRef = useRef<any>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Float32Array | null>(null);
+  const intentRef = useRef<Intent | null>(null);
+  const subIntentRef = useRef<Exclude<SubIntent, null> | null>(null);
+  const stepIndexRef = useRef<number>(0);
 
   // Mapping texte libre → intent/subIntent (heuristique simple)
   function mapTextToMeta(text: string): { intent: Intent; subIntent?: Exclude<SubIntent, null> } | null {
@@ -1337,6 +1340,43 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     if (composerText.length > 0) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [composerText]);
 
+  // Écouter les messages depuis WeWeb pour ouvrir le mode voix (Option B)
+  useEffect(() => {
+    function handleVoiceMessage(event: MessageEvent) {
+      // Message pour ouvrir le mode voix (après que WeWeb ait demandé l'autorisation micro)
+      if (event.data?.type === "open_voice_mode") {
+        console.log("Ouverture du mode voix depuis WeWeb");
+        
+        // Ouvrir l'overlay mode voix
+        setVoiceMode(true);
+        setVoiceStatus("Prêt - Cliquez sur le bouton pour commencer");
+        
+        // Ne pas démarrer automatiquement - laisser l'utilisateur cliquer sur le bouton
+        // La permission micro a déjà été accordée par WeWeb, donc startRec() devrait fonctionner
+        
+        // Utiliser les valeurs actuelles depuis les refs (évite les problèmes de dépendances)
+        try {
+          emitTelemetry({ 
+            type: "voice_open_from_weweb", 
+            intent: intentRef.current || undefined, 
+            subIntent: subIntentRef.current || undefined, 
+            step: stepIndexRef.current 
+          });
+        } catch (e) {
+          console.warn("Erreur telemetry:", e);
+        }
+      }
+    }
+
+    // Ajouter l'écouteur d'événements
+    window.addEventListener("message", handleVoiceMessage);
+
+    // Nettoyer l'écouteur à la destruction du composant
+    return () => {
+      window.removeEventListener("message", handleVoiceMessage);
+    };
+  }, []); // Pas de dépendances - utilise les refs pour les valeurs actuelles
+
   // Pas de message d'intro par défaut
 
   // Mettre à jour les refs quand les valeurs changent
@@ -1347,6 +1387,19 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
   useEffect(() => {
     voiceModeRef.current = voiceMode;
   }, [voiceMode]);
+
+  // Mettre à jour les refs pour intent, subIntent et stepIndex
+  useEffect(() => {
+    intentRef.current = intent;
+  }, [intent]);
+
+  useEffect(() => {
+    subIntentRef.current = subIntent;
+  }, [subIntent]);
+
+  useEffect(() => {
+    stepIndexRef.current = stepIndex;
+  }, [stepIndex]);
 
   // Ref pour stocker la transcription actuelle (pour accès dans les callbacks)
   const voiceTranscriptionRef = useRef("");
