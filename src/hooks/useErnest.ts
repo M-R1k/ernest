@@ -7,6 +7,10 @@ import type {
   ErnestState,
   SendActionArgs,
 } from "../types";
+import {
+  SECOND_MESSAGE_INTERVAL_MS,
+  splitSecondMessage,
+} from "../utils/secondMessage";
 
 const SESSION_KEY = "soscyber_session";
 const MESSAGES_KEY = "soscyber_messages";
@@ -211,6 +215,7 @@ export function useErnest(webhookOverride?: string): ErnestHookReturn {
 
   const sendAction = useCallback(
     async ({ intent, subIntent, step, text }: SendActionArgs) => {
+      let waitingForSegments = false;
       const now = Date.now();
       const userText = text || `${intent}${subIntent ? `:${subIntent}` : ""}#${step}`;
       appendMessage({ role: "user", text: userText, ts: now });
@@ -274,57 +279,56 @@ export function useErnest(webhookOverride?: string): ErnestHookReturn {
           }
         }
         
-        // Si answer est un tableau, créer plusieurs messages avec un délai
+        const queue: string[] = [];
+
+        const enqueueSegments = (raw: unknown) => {
+          const trimmed = String(raw ?? "").trim();
+          if (!trimmed) return;
+          const segments = splitSecondMessage(trimmed);
+          segments.forEach((segment) => {
+            if (segment) {
+              queue.push(segment);
+            }
+          });
+        };
+
         if (Array.isArray(answer)) {
           console.log("✅ Answer est un tableau avec", answer.length, "éléments");
           if (answer.length === 0) {
             console.warn("⚠️ Le tableau answer est vide!");
           }
           answer.forEach((msg, index) => {
-            const trimmedMsg = String(msg).trim();
-            console.log(`📝 Message ${index}:`, trimmedMsg.substring(0, 50) + "...");
-            if (trimmedMsg) {
-              setTimeout(() => {
-                appendMessage({ 
-                  role: "assistant", 
-                  text: trimmedMsg, 
-                  ts: Date.now() + index 
-                });
-              }, index * 2000); // Délai de 2 secondes entre chaque message
-            } else {
-              console.warn(`⚠️ Message ${index} est vide après trim`);
-            }
+            enqueueSegments(msg);
+            console.log(`📝 Message ${index}:`, String(msg).trim().substring(0, 50) + "...");
           });
         } else {
-          // Comportement normal pour une string
           console.log("📄 Answer est une string");
-          const answerText = String(answer);
-          if (answerText) {
-            // Vérifier si le message contient le séparateur "🟪 **Deuxième Message**"
-            const separatorRegex = /🟪\s*\*\*De(?:ux|xui)ième\s+Message\*\*/i;
-            const match = answerText.match(separatorRegex);
-            
-            if (match) {
-              const separatorIndex = match.index!;
-              const firstPart = answerText.substring(0, separatorIndex).trim();
-              const secondPart = answerText.substring(separatorIndex + match[0].length).trim();
-              
-              // Afficher la première partie immédiatement
-              if (firstPart) {
-                appendMessage({ role: "assistant", text: firstPart, ts: Date.now() });
+          enqueueSegments(answer);
+        }
+
+        if (queue.length === 0) {
+          waitingForSegments = false;
+        } else {
+          waitingForSegments = true;
+          queue.forEach((segment, index) => {
+            const sendSegment = () => {
+              appendMessage({
+                role: "assistant",
+                text: segment,
+                ts: Date.now() + index,
+              });
+              if (index === queue.length - 1) {
+                waitingForSegments = false;
+                setLoading(false);
               }
-              
-              // Afficher la deuxième partie après 2 secondes
-              if (secondPart) {
-                setTimeout(() => {
-                  appendMessage({ role: "assistant", text: secondPart, ts: Date.now() });
-                }, 2000);
-              }
+            };
+
+            if (index === 0) {
+              sendSegment();
             } else {
-              // Pas de séparateur, afficher le message normalement
-              appendMessage({ role: "assistant", text: answerText, ts: Date.now() });
+              setTimeout(sendSegment, index * SECOND_MESSAGE_INTERVAL_MS);
             }
-          }
+          });
         }
       } catch (e: any) {
         console.error("❌ Erreur dans sendAction:", e);
@@ -337,7 +341,9 @@ export function useErnest(webhookOverride?: string): ErnestHookReturn {
           ts: Date.now() 
         });
       } finally {
-        setLoading(false);
+        if (!waitingForSegments) {
+          setLoading(false);
+        }
       }
     },
     [appendMessage, webhookUrl]

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
 import { useThinkingSteps } from './hooks/useThinkingSteps'
+import { splitSecondMessage, SECOND_MESSAGE_INTERVAL_MS } from './utils/secondMessage'
 
 // Configuration de l'API N8N
 const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook/soscyber2'
@@ -207,99 +208,69 @@ export default function ChatInterface() {
    * Fonction helper pour ajouter des messages (gère les tableaux)
    */
   function addBotMessages(answer) {
-    // Si answer est une string qui ressemble à un tableau JSON, la parser
-    if (typeof answer === 'string' && answer.trim().startsWith('[') && answer.trim().endsWith(']')) {
-      try {
-        const parsed = JSON.parse(answer);
-        if (Array.isArray(parsed)) {
-          answer = parsed;
-        }
-      } catch (e) {
-        console.warn("Impossible de parser answer comme JSON:", e);
+    return new Promise((resolve) => {
+      const queue = []
+
+      const enqueueSegments = (raw) => {
+        const trimmed = String(raw ?? '').trim()
+        if (!trimmed) return
+        const segments = splitSecondMessage(trimmed)
+        segments.forEach((segment) => {
+          if (segment) {
+            queue.push(segment)
+          }
+        })
       }
-    }
-    if (Array.isArray(answer)) {
-      answer.forEach((msg, index) => {
-        const trimmedMsg = String(msg).trim();
-        if (trimmedMsg) {
-          setTimeout(() => {
-            const botResponse = {
-              id: (Date.now() + index).toString(),
-              from: 'bot',
-              text: trimmedMsg,
-              timestamp: new Date()
-            };
-            setMessages(prev => [...prev, botResponse]);
-            
-            // Lecture vocale automatique si activée
-            if (voiceMode) {
-              speakText(trimmedMsg);
-            }
-          }, index * 2000); // Délai de 2 secondes entre chaque message
+
+      // Si answer est une string qui ressemble à un tableau JSON, la parser
+      if (typeof answer === 'string' && answer.trim().startsWith('[') && answer.trim().endsWith(']')) {
+        try {
+          const parsed = JSON.parse(answer);
+          if (Array.isArray(parsed)) {
+            answer = parsed;
+          }
+        } catch (e) {
+          console.warn("Impossible de parser answer comme JSON:", e);
         }
-      });
-    } else {
-      const answerText = String(answer);
-      if (answerText) {
-        // Vérifier si le message contient le séparateur "🟪 **Deuxième Message**"
-        const separatorRegex = /🟪\s*\*\*De(?:ux|xui)ième\s+Message\*\*/i;
-        const match = answerText.match(separatorRegex);
-        
-        if (match) {
-          const separatorIndex = match.index;
-          const firstPart = answerText.substring(0, separatorIndex).trim();
-          const secondPart = answerText.substring(separatorIndex + match[0].length).trim();
-          
-          // Afficher la première partie immédiatement
-          if (firstPart) {
-            const botResponse1 = {
-              id: (Date.now() + 1).toString(),
-              from: 'bot',
-              text: firstPart,
-              timestamp: new Date()
-            };
-            setMessages(prev => [...prev, botResponse1]);
-            
-            // Lecture vocale automatique si activée
-            if (voiceMode) {
-              speakText(firstPart);
-            }
-          }
-          
-          // Afficher la deuxième partie après 2 secondes
-          if (secondPart) {
-            setTimeout(() => {
-              const botResponse2 = {
-                id: (Date.now() + 2000).toString(),
-                from: 'bot',
-                text: secondPart,
-                timestamp: new Date()
-              };
-              setMessages(prev => [...prev, botResponse2]);
-              
-              // Lecture vocale automatique si activée
-              if (voiceMode) {
-                speakText(secondPart);
-              }
-            }, 2000);
-          }
-        } else {
-          // Pas de séparateur, afficher le message normalement
+      }
+
+      if (Array.isArray(answer)) {
+        answer.forEach((msg) => enqueueSegments(msg));
+      } else {
+        enqueueSegments(String(answer ?? ''));
+      }
+
+      if (queue.length === 0) {
+        resolve();
+        return;
+      }
+
+      queue.forEach((segment, index) => {
+        const sendSegment = () => {
           const botResponse = {
-            id: (Date.now() + 1).toString(),
+            id: (Date.now() + index).toString(),
             from: 'bot',
-            text: answerText,
+            text: segment,
             timestamp: new Date()
           };
           setMessages(prev => [...prev, botResponse]);
           
-          // Lecture vocale automatique si activée
           if (voiceMode) {
-            speakText(answerText);
+            speakText(segment);
           }
+
+          if (index === queue.length - 1) {
+            resolve();
+          }
+        };
+        
+        if (index === 0) {
+          sendSegment();
+        } else {
+          setTimeout(sendSegment, index * SECOND_MESSAGE_INTERVAL_MS);
         }
-      }
-    }
+      });
+    });
   }
 
   /**
@@ -355,7 +326,7 @@ export default function ChatInterface() {
       const responseText = data?.answer || data?.transcript || "";
       
       if (responseText) {
-        addBotMessages(responseText);
+        await addBotMessages(responseText);
       }
     } catch (error) {
       console.error('Erreur lors de l\'envoi:', error)
@@ -525,7 +496,7 @@ export default function ChatInterface() {
       const responseText = data?.answer || data?.transcript || "";
       
       if (responseText) {
-        addBotMessages(responseText);
+        await addBotMessages(responseText);
       }
       setStatus("Prêt");
     } catch (e) {
@@ -533,6 +504,7 @@ export default function ChatInterface() {
       setStatus("Erreur d\'envoi");
       setIsThinking(false);
     } finally {
+      setIsThinking(false);
       setSending(false);
     }
   }
@@ -589,7 +561,7 @@ export default function ChatInterface() {
       const responseText = data?.answer || data?.transcript || "";
       
       if (responseText) {
-        addBotMessages(responseText);
+        await addBotMessages(responseText);
       }
       setAttachedFiles([])
       setStatus('Prêt')
@@ -598,6 +570,7 @@ export default function ChatInterface() {
       setStatus('Erreur d\'envoi')
       setIsThinking(false)
     } finally {
+      setIsThinking(false)
       setSending(false)
     }
   }

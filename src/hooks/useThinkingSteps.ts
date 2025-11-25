@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { BookOpen, Brain, PenSquare, ShieldCheck } from "lucide-react";
 
@@ -43,26 +43,49 @@ type UseThinkingStepsResult = {
   steps: ThinkingStep[];
 };
 
+type ThinkingStepsConfig = {
+  minDelayMs?: number;
+  maxDelayMs?: number;
+};
+
 export function useThinkingSteps(
   active: boolean,
-  intervalMs = 1800
+  config?: ThinkingStepsConfig
 ): UseThinkingStepsResult {
   const [stepIndex, setStepIndex] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const minDelay = Math.max(600, config?.minDelayMs ?? 1200);
+  const maxDelay = Math.max(minDelay + 200, config?.maxDelayMs ?? 2600);
+
+  function scheduleNextStep() {
+    const duration =
+      Math.random() * (maxDelay - minDelay) + minDelay;
+    timerRef.current = setTimeout(() => {
+      setStepIndex((prev) => (prev + 1) % THINKING_STEPS.length);
+      scheduleNextStep();
+    }, duration);
+  }
+
+  function clearTimer() {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
 
   useEffect(() => {
     if (!active) {
       setStepIndex(0);
+      clearTimer();
       return;
     }
 
-    const timer = setInterval(() => {
-      setStepIndex((prev) => (prev + 1) % THINKING_STEPS.length);
-    }, intervalMs);
+    scheduleNextStep();
 
     return () => {
-      clearInterval(timer);
+      clearTimer();
     };
-  }, [active, intervalMs]);
+  }, [active, minDelay, maxDelay]);
 
   const safeIndex = Math.min(stepIndex, THINKING_STEPS.length - 1);
 

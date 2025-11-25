@@ -5,6 +5,7 @@ import { useThinkingSteps } from "./hooks/useThinkingSteps";
 import type { ErnestWidgetProps, Intent, SubIntent, SendActionArgs, ChatMessage, SosSubIntent } from "./types";
 import { ariaButtonProps, onActivate, focusFirstInteractive } from "./utils/accessibility";
 import ReactMarkdown from 'react-markdown';
+import { splitSecondMessage, SECOND_MESSAGE_INTERVAL_MS } from "./utils/secondMessage";
 
 // Composant VoiceModeOverlay - Mode voix amélioré avec visualisation et transcription
 type VoiceModeOverlayProps = {
@@ -528,39 +529,6 @@ function VoiceModeOverlay({
 }
 
 type Screen = "home" | "sos" | "chat";
-
-/**
- * Fonction pour diviser un message contenant le séparateur "🟪 **Deuxième Message**" en deux parties
- * et les afficher avec un délai de 2 secondes entre elles
- */
-function handleSplitMessage(text: string, appendFn: (text: string) => void) {
-  // Chercher le séparateur (gérer la faute de frappe "Dexuième" aussi)
-  const separatorRegex = /🟪\s*\*\*De(?:ux|xui)ième\s+Message\*\*/i;
-  const match = text.match(separatorRegex);
-  
-  if (match) {
-    const separatorIndex = match.index!;
-    const firstPart = text.substring(0, separatorIndex).trim();
-    const secondPart = text.substring(separatorIndex + match[0].length).trim();
-    
-    // Afficher la première partie immédiatement
-    if (firstPart) {
-      appendFn(firstPart);
-    }
-    
-    // Afficher la deuxième partie après 2 secondes
-    if (secondPart) {
-      setTimeout(() => {
-        appendFn(secondPart);
-      }, 2000);
-    }
-    return true; // Indique que le message a été divisé
-  }
-  
-  // Pas de séparateur, afficher le message normalement
-  appendFn(text);
-  return false;
-}
 
 const ALL_INTENTS: Array<{ key: Intent; label: string; icon: string }> = [
   { key: "SECURE_ACCOUNTS", label: "Je sécurise mes comptes en ligne", icon: "🔐" },
@@ -1506,30 +1474,49 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
   // Fonction pour envoyer le texte transcrit
   const sendTranscription = useCallback(async () => {
-    const textToSend = finalTranscription || voiceTranscriptionRef.current.replace(/\s*\[.*\]$/, "").trim();
-    
+    const textToSend =
+      finalTranscription ||
+      voiceTranscriptionRef.current.replace(/\s*\[.*\]$/, "").trim();
+
     if (!textToSend || textToSend.length === 0) {
       setVoiceStatus("Aucun texte à envoyer");
       return;
     }
 
     setVoiceStatus("Envoi du texte...");
-    
+
+    const cleanup = () => {
+      setVoiceTranscription("");
+      setFinalTranscription("");
+      setVoiceStatus("Prêt");
+    };
+
+    // Fermer immédiatement le mode voix pour revenir à l'interface principale
+    setVoiceMode(false);
+
     // Mapping texte → intent/subIntent
     const mapped = mapTextToMeta(textToSend);
     const effectiveIntent: Intent = mapped?.intent || ("fallback" as Intent);
-    const effectiveSub: Exclude<SubIntent, null> | undefined = mapped?.subIntent || undefined;
+    const effectiveSub: Exclude<SubIntent, null> | undefined =
+      mapped?.subIntent || undefined;
     const effectiveStep = stepIndex > 0 ? stepIndex : 1;
 
-    // Envoyer le texte via sendAction (workflow n8n)
-    emitTelemetry({ type: "voice_text_sent", intent: effectiveIntent || undefined, subIntent: effectiveSub || undefined, step: stepIndex });
-    await sendAction({ intent: effectiveIntent, subIntent: effectiveSub, step: effectiveStep, text: textToSend });
-
-    // Nettoyer après l'envoi
-    setVoiceMode(false);
-    setVoiceTranscription("");
-    setFinalTranscription("");
-    setVoiceStatus("Prêt");
+    try {
+      emitTelemetry({
+        type: "voice_text_sent",
+        intent: effectiveIntent || undefined,
+        subIntent: effectiveSub || undefined,
+        step: stepIndex,
+      });
+      await sendAction({
+        intent: effectiveIntent,
+        subIntent: effectiveSub,
+        step: effectiveStep,
+        text: textToSend,
+      });
+    } finally {
+      cleanup();
+    }
   }, [finalTranscription, stepIndex, sendAction]);
 
   // Détection de silence : arrêter automatiquement après 3 secondes sans voix
@@ -2343,19 +2330,33 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
             console.warn("Impossible de parser answer comme JSON:", e);
           }
         }
-        if (Array.isArray(answer)) {
-          answer.forEach((msg, index) => {
-            const trimmedMsg = String(msg).trim();
-            if (trimmedMsg) {
-              setTimeout(() => {
-                appendAssistant(trimmedMsg);
-              }, index * 2000); // Délai de 2 secondes entre chaque message
+        const queue: string[] = [];
+
+        const enqueueSegments = (raw: unknown) => {
+          const trimmedMsg = String(raw ?? "").trim();
+          if (!trimmedMsg) return;
+          const segments = splitSecondMessage(trimmedMsg);
+          segments.forEach((segment) => {
+            if (segment) {
+              queue.push(segment);
             }
           });
+        };
+
+        if (Array.isArray(answer)) {
+          answer.forEach((msg) => enqueueSegments(msg));
         } else {
-          // Gérer le séparateur "🟪 **Deuxième Message**"
-          handleSplitMessage(String(answer), appendAssistant);
+          enqueueSegments(String(answer));
         }
+
+        queue.forEach((segment, index) => {
+          const sendSegment = () => appendAssistant(segment);
+          if (index === 0) {
+            sendSegment();
+          } else {
+            setTimeout(sendSegment, index * SECOND_MESSAGE_INTERVAL_MS);
+          }
+        });
       }
       
       // Fermer le mode voix et réinitialiser
@@ -2644,19 +2645,33 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
                         console.warn("Impossible de parser answer comme JSON:", e);
                       }
                     }
-                    if (Array.isArray(answer)) {
-                      answer.forEach((msg, index) => {
-                        const trimmedMsg = String(msg).trim();
-                        if (trimmedMsg) {
-                          setTimeout(() => {
-                            appendAssistant(trimmedMsg);
-                          }, index * 2000); // Délai de 2 secondes entre chaque message
+                    const queue: string[] = [];
+
+                    const enqueueSegments = (raw: unknown) => {
+                      const trimmedMsg = String(raw ?? "").trim();
+                      if (!trimmedMsg) return;
+                      const segments = splitSecondMessage(trimmedMsg);
+                      segments.forEach((segment) => {
+                        if (segment) {
+                          queue.push(segment);
                         }
                       });
+                    };
+
+                    if (Array.isArray(answer)) {
+                      answer.forEach((msg) => enqueueSegments(msg));
                     } else {
-                      // Gérer le séparateur "🟪 **Deuxième Message**"
-                      handleSplitMessage(String(answer), appendAssistant);
+                      enqueueSegments(String(answer));
                     }
+
+                    queue.forEach((segment, index) => {
+                      const sendSegment = () => appendAssistant(segment);
+                      if (index === 0) {
+                        sendSegment();
+                      } else {
+                        setTimeout(sendSegment, index * SECOND_MESSAGE_INTERVAL_MS);
+                      }
+                    });
                   }
                 })
                 .catch((err) => {

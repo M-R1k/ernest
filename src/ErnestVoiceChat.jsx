@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useThinkingSteps } from './hooks/useThinkingSteps'
+import { splitSecondMessage, SECOND_MESSAGE_INTERVAL_MS } from './utils/secondMessage'
 
 const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook-test/soscyber2'
 const N8N_WEBHOOK = import.meta.env.VITE_N8N_WEBHOOK || DEFAULT_N8N_WEBHOOK
@@ -60,36 +61,50 @@ export default function ErnestVoiceChat() {
           console.warn("Impossible de parser answer comme JSON:", e);
         }
       }
-      if (Array.isArray(parsedAnswer)) {
-        // Si c'est un tableau, ajouter chaque message avec un délai
-        parsedAnswer.forEach((msg, index) => {
-          const trimmedMsg = String(msg).trim();
-          if (trimmedMsg) {
-            setTimeout(() => {
-              setMessages(prev => [...prev, { 
-                id: crypto.randomUUID(), 
-                from: 'bot', 
-                text: trimmedMsg 
-              }]);
-              if (index === parsedAnswer.length - 1) {
-                setIsThinking(false);
-              }
-            }, index * 2000); // Délai de 2 secondes entre chaque message
+      const queue = [];
+
+      const enqueueSegments = (raw) => {
+        const trimmed = String(raw ?? '').trim();
+        if (!trimmed) return;
+        const segments = splitSecondMessage(trimmed);
+        segments.forEach((segment) => {
+          if (segment) {
+            queue.push(segment);
           }
         });
-        setAnswer(''); // Réinitialiser après avoir traité tous les messages
+      };
+
+      if (Array.isArray(parsedAnswer)) {
+        parsedAnswer.forEach((msg) => enqueueSegments(msg));
       } else {
-        const trimmedAnswer = String(parsedAnswer).trim();
-        if (trimmedAnswer) {
+        enqueueSegments(parsedAnswer);
+      }
+
+      if (queue.length === 0) {
+        setIsThinking(false);
+        setAnswer('');
+        return;
+      }
+
+      queue.forEach((segment, index) => {
+        const sendSegment = () => {
           setMessages(prev => [...prev, { 
             id: crypto.randomUUID(), 
             from: 'bot', 
-            text: trimmedAnswer 
+            text: segment 
           }]);
-          setIsThinking(false);
-          setAnswer(''); // Réinitialiser pour éviter les re-déclenchements
+          if (index === queue.length - 1) {
+            setIsThinking(false);
+          }
+        };
+
+        if (index === 0) {
+          sendSegment();
+        } else {
+          setTimeout(sendSegment, index * SECOND_MESSAGE_INTERVAL_MS);
         }
-      }
+      });
+      setAnswer('');
     }
   }, [answer])
 
