@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useErnest from "./hooks/useErnest";
+import { useThinkingSteps } from "./hooks/useThinkingSteps";
 import type { ErnestWidgetProps, Intent, SubIntent, SendActionArgs, ChatMessage, SosSubIntent } from "./types";
 import { ariaButtonProps, onActivate, focusFirstInteractive } from "./utils/accessibility";
 import ReactMarkdown from 'react-markdown';
@@ -1303,6 +1304,9 @@ function Composer({
 
 export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" }: ErnestWidgetProps) {
   const { sessionId, messages, progress, sendAction, loading, error, clearError, addProgress, reset, appendAssistant, appendUser } = useErnest(webhookUrl);
+  const thinkingStatus = useThinkingSteps(loading);
+  const ThinkingIcon = thinkingStatus.step.icon;
+  const thinkingPercent = Math.round(thinkingStatus.progress * 100);
   const [screen, setScreen] = useState<Screen>("home");
   const [intent, setIntent] = useState<Intent | null>(null);
   const [subIntent, setSubIntent] = useState<Exclude<SubIntent, null> | null>(null);
@@ -2443,13 +2447,37 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
               );
             })}
             {loading && (
-              <div className="mr-auto inline-flex items-center gap-2 md:gap-3 rounded-2xl bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-gray-900 text-[16px] md:text-[18px] ring-1 ring-inset ring-gray-200">
-                <span>Ernest réfléchit</span>
-                <span className="inline-flex gap-1 md:gap-1.5">
-                  <span className="h-2 w-2 md:h-2.5 md:w-2.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "0ms" }} />
-                  <span className="h-2 w-2 md:h-2.5 md:w-2.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "150ms" }} />
-                  <span className="h-2 w-2 md:h-2.5 md:w-2.5 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "300ms" }} />
-                </span>
+              <div className="mr-auto w-full max-w-screen-sm rounded-2xl bg-gray-50 px-4 py-3 text-gray-900 shadow-sm ring-1 ring-gray-200 md:max-w-screen-md md:px-5">
+                <div className="flex items-center gap-4">
+                  <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600/15 to-indigo-600/20 text-blue-600">
+                    <ThinkingIcon className="h-5 w-5 md:h-6 md:w-6" aria-hidden="true" />
+                    <span className="absolute inset-0 rounded-full border border-blue-300/60 animate-ping" aria-hidden="true"></span>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[16px] font-semibold md:text-[18px]">{thinkingStatus.step.label}</span>
+                      <span className="text-sm font-medium text-gray-500">{thinkingPercent}%</span>
+                    </div>
+                    <p className="text-sm text-gray-500">{thinkingStatus.step.subLabel}</p>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+                      <span
+                        className="block h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
+                        style={{ width: `${thinkingStatus.progress * 100}%` }}
+                        aria-hidden="true"
+                      ></span>
+                    </div>
+                    <div className="flex gap-1">
+                      {[0, 1, 2].map((dot) => (
+                        <span
+                          key={`widget-dot-${dot}`}
+                          className="h-2 w-2 rounded-full bg-blue-400/70 animate-bounce"
+                          style={{ animationDelay: `${dot * 0.15}s` }}
+                          aria-hidden="true"
+                        ></span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             {error && (

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useThinkingSteps } from './hooks/useThinkingSteps'
 
 const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook-test/soscyber2'
 const N8N_WEBHOOK = import.meta.env.VITE_N8N_WEBHOOK || DEFAULT_N8N_WEBHOOK
@@ -42,6 +43,8 @@ export default function ErnestVoiceChat() {
   const showAttachButton = !isVoiceActive && !interactionLocked && !hasTextInput
   const showTextComposer = !isVoiceActive && !hasAttachments
   const showSendTextButton = !isVoiceActive && !hasAttachments
+  const thinkingStatus = useThinkingSteps(isThinking)
+  const ThinkingIcon = thinkingStatus.step.icon
   
   useEffect(() => {
     if (answer) {
@@ -408,15 +411,34 @@ export default function ErnestVoiceChat() {
             </li>
           ))}
           {isThinking && (
-            <li className="flex justify-start">
-              <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ring-1 ring-inset bg-gray-100 text-gray-900 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700">
-                <div className="flex items-center gap-2">
-                  <span>Ernest réfléchit</span>
-                  <div className="flex gap-1">
-                    <div className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <li className="flex justify-start" role="status" aria-live="polite">
+              <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-4 shadow-sm ring-1 ring-inset bg-gray-100 text-gray-900 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-gray-900/5 text-gray-900 dark:bg-white/10 dark:text-white">
+                    <ThinkingIcon className="h-5 w-5" aria-hidden="true" />
+                    <span className="absolute inset-0 rounded-full border border-gray-400/60 dark:border-white/30 animate-pulse" aria-hidden="true"></span>
                   </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold">{thinkingStatus.step.label}</span>
+                    <span className="text-sm opacity-80">{thinkingStatus.step.subLabel}</span>
+                  </div>
+                </div>
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                  <span
+                    className="block h-full rounded-full bg-gradient-to-r from-gray-600 to-gray-900 dark:from-white/50 dark:to-white transition-all duration-500"
+                    style={{ width: `${thinkingStatus.progress * 100}%` }}
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                <div className="mt-2 flex gap-1.5">
+                  {[0, 1, 2].map((dot) => (
+                    <span
+                      key={`voice-dot-${dot}`}
+                      className="h-2 w-2 rounded-full bg-gray-500 animate-bounce dark:bg-white/70"
+                      style={{ animationDelay: `${dot * 0.18}s` }}
+                      aria-hidden="true"
+                    ></span>
+                  ))}
                 </div>
               </div>
             </li>

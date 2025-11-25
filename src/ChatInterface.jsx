@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
+import { useThinkingSteps } from './hooks/useThinkingSteps'
 
 // Configuration de l'API N8N
 const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook/soscyber2'
@@ -66,6 +67,7 @@ export default function ChatInterface() {
   const hasAttachments = attachedFiles.length > 0
   const isVoiceActive = isRecording
   const interactionLocked = sending || isThinking
+  const thinkingStatus = useThinkingSteps(isThinking)
   // Le bouton micro est toujours visible (sauf si interaction verrouillée), pour permettre de passer au mode vocal même avec du texte
   const showVoiceButton = !interactionLocked || isVoiceActive
   const showAttachButton = !isVoiceActive && !interactionLocked && !hasTextInput
@@ -104,6 +106,21 @@ export default function ChatInterface() {
     background: 'bg-white text-gray-900',
     border: 'border border-gray-300'
   }
+
+  const thinkingIndicatorTheme = highContrast ? {
+    container: 'bg-white text-gray-900 border-2 border-black',
+    icon: 'bg-black/5 text-gray-900',
+    dots: 'bg-black',
+    track: 'bg-black/10',
+    bar: 'bg-black'
+  } : {
+    container: 'bg-gray-800 text-white border border-white/10',
+    icon: 'bg-white/10 text-white',
+    dots: 'bg-white/80',
+    track: 'bg-white/15',
+    bar: 'bg-white'
+  }
+  const ThinkingIcon = thinkingStatus.step.icon
 
   // Auto-scroll vers le bas des messages
   useEffect(() => {
@@ -793,16 +810,36 @@ export default function ChatInterface() {
           
           {/* Indicateur de réflexion */}
           {isThinking && (
-            <div className="flex justify-start">
-              <div className={`p-4 rounded-2xl bg-gray-800 text-white ${colorScheme.border}`}>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 flex-shrink-0 text-white" />
-                  <span>Ernest réfléchit</span>
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce opacity-70"></div>
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce opacity-70" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce opacity-70" style={{animationDelay: '0.2s'}}></div>
+            <div className="flex justify-start" role="status" aria-live="polite">
+              <div className={`w-full max-w-lg p-4 rounded-2xl shadow-lg ${thinkingIndicatorTheme.container}`}>
+                <div className="flex items-center gap-4">
+                  <div className={`relative flex h-12 w-12 items-center justify-center rounded-full ${thinkingIndicatorTheme.icon}`}>
+                    <ThinkingIcon className="h-5 w-5" aria-hidden="true" />
+                    <span
+                      className={`absolute inset-0 rounded-full border ${highContrast ? 'border-black/30' : 'border-white/30'} animate-ping`}
+                      aria-hidden="true"
+                    ></span>
                   </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-base">{thinkingStatus.step.label}</span>
+                    <span className="text-sm opacity-80">{thinkingStatus.step.subLabel}</span>
+                  </div>
+                </div>
+                <div className={`mt-4 h-1.5 w-full overflow-hidden rounded-full ${thinkingIndicatorTheme.track}`}>
+                  <div
+                    className={`h-full rounded-full ${thinkingIndicatorTheme.bar} transition-all duration-500`}
+                    style={{ width: `${thinkingStatus.progress * 100}%` }}
+                  ></div>
+                </div>
+                <div className="mt-3 flex gap-1.5">
+                  {[0, 1, 2].map((dot) => (
+                    <span
+                      key={dot}
+                      className={`h-2.5 w-2.5 rounded-full ${thinkingIndicatorTheme.dots} animate-bounce`}
+                      style={{ animationDelay: `${dot * 0.18}s` }}
+                      aria-hidden="true"
+                    ></span>
+                  ))}
                 </div>
               </div>
             </div>
