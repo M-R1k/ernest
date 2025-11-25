@@ -2,8 +2,11 @@ import { useState, useRef, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
 
 // Configuration de l'API N8N
-const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook/ernest/voice'
+const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook/soscyber2'
 const N8N_WEBHOOK = import.meta.env.VITE_N8N_WEBHOOK || DEFAULT_N8N_WEBHOOK
+
+// Message de bienvenue
+const WELCOME_MESSAGE = 'Bonjour ! Je vais vous aider à vérifier si le message que vous avez reçu est fiable.\n\nCopiez votre message ici, ou téléchargez le pour que je l\'analyse pour vous.'
 
 /**
  * Interface WYSIWYG de chatbot ultra-accessible dédiée aux seniors
@@ -23,7 +26,7 @@ export default function ChatInterface() {
     { 
       id: 'welcome', 
       from: 'bot', 
-      text: 'Bonjour, je suis Ernest. Appuyez sur le micro pour parler ou écrivez votre message.',
+      text: WELCOME_MESSAGE,
       timestamp: new Date()
     }
   ])
@@ -138,6 +141,60 @@ export default function ChatInterface() {
   }
 
   /**
+   * Fonction helper pour ajouter des messages (gère les tableaux)
+   */
+  function addBotMessages(answer) {
+    // Si answer est une string qui ressemble à un tableau JSON, la parser
+    if (typeof answer === 'string' && answer.trim().startsWith('[') && answer.trim().endsWith(']')) {
+      try {
+        const parsed = JSON.parse(answer);
+        if (Array.isArray(parsed)) {
+          answer = parsed;
+        }
+      } catch (e) {
+        console.warn("Impossible de parser answer comme JSON:", e);
+      }
+    }
+    if (Array.isArray(answer)) {
+      answer.forEach((msg, index) => {
+        const trimmedMsg = String(msg).trim();
+        if (trimmedMsg) {
+          setTimeout(() => {
+            const botResponse = {
+              id: (Date.now() + index).toString(),
+              from: 'bot',
+              text: trimmedMsg,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, botResponse]);
+            
+            // Lecture vocale automatique si activée
+            if (voiceMode) {
+              speakText(trimmedMsg);
+            }
+          }, index * 2000); // Délai de 2 secondes entre chaque message
+        }
+      });
+    } else {
+      const answerText = String(answer);
+      if (answerText) {
+        const botResponse = {
+          id: (Date.now() + 1).toString(),
+          from: 'bot',
+          text: answerText,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botResponse]);
+        
+        // Lecture vocale automatique si activée
+        if (voiceMode) {
+          speakText(answerText);
+        }
+      }
+    }
+  }
+
+  /**
    * Fonction pour sélectionner le type MIME audio
    */
   function pickMime() {
@@ -182,19 +239,7 @@ export default function ChatInterface() {
       const data = await postToN8n(fd);
       
       if (data?.answer) {
-        const botResponse = {
-          id: (Date.now() + 1).toString(),
-          from: 'bot',
-          text: String(data.answer),
-          timestamp: new Date()
-        }
-        
-        setMessages(prev => [...prev, botResponse])
-        
-        // Lecture vocale automatique si activée
-        if (voiceMode) {
-          speakText(botResponse.text)
-        }
+        addBotMessages(data.answer);
       }
     } catch (error) {
       console.error('Erreur lors de l\'envoi:', error)
@@ -355,18 +400,7 @@ export default function ChatInterface() {
 
       const data = await postToN8n(fd);
       if (data?.answer) {
-        const botResponse = {
-          id: crypto.randomUUID(),
-          from: "bot",
-          text: String(data.answer),
-          timestamp: new Date()
-        };
-        setMessages((prev) => [...prev, botResponse]);
-        
-        // Lecture vocale automatique si activée
-        if (voiceMode) {
-          speakText(botResponse.text)
-        }
+        addBotMessages(data.answer);
       }
       setStatus("Prêt");
     } catch (e) {
@@ -421,18 +455,7 @@ export default function ChatInterface() {
       ])
       setIsThinking(true)
       if (data?.answer) {
-        const botResponse = {
-          id: crypto.randomUUID(),
-          from: 'bot',
-          text: String(data.answer),
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, botResponse])
-        
-        // Lecture vocale automatique si activée
-        if (voiceMode) {
-          speakText(botResponse.text)
-        }
+        addBotMessages(data.answer);
       }
       setAttachedFiles([])
       setStatus('Prêt')
@@ -515,7 +538,7 @@ export default function ChatInterface() {
       { 
         id: crypto.randomUUID(), 
         from: "bot", 
-        text: "Nouvelle conversation démarrée.",
+        text: WELCOME_MESSAGE,
         timestamp: new Date()
       },
     ]);

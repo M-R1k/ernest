@@ -44,10 +44,49 @@ export default function ErnestVoiceChat() {
   const showSendTextButton = !isVoiceActive && !hasAttachments
   
   useEffect(() => {
-    if (answer && answer.trim()) {
-      setMessages(prev => [...prev, { id: crypto.randomUUID(), from: 'bot', text: answer.trim() }])
-      setIsThinking(false)
-      setAnswer('') // Réinitialiser pour éviter les re-déclenchements
+    if (answer) {
+      // Si answer est une string qui ressemble à un tableau JSON, la parser
+      let parsedAnswer = answer;
+      if (typeof answer === 'string' && answer.trim().startsWith('[') && answer.trim().endsWith(']')) {
+        try {
+          const parsed = JSON.parse(answer);
+          if (Array.isArray(parsed)) {
+            parsedAnswer = parsed;
+          }
+        } catch (e) {
+          console.warn("Impossible de parser answer comme JSON:", e);
+        }
+      }
+      if (Array.isArray(parsedAnswer)) {
+        // Si c'est un tableau, ajouter chaque message avec un délai
+        parsedAnswer.forEach((msg, index) => {
+          const trimmedMsg = String(msg).trim();
+          if (trimmedMsg) {
+            setTimeout(() => {
+              setMessages(prev => [...prev, { 
+                id: crypto.randomUUID(), 
+                from: 'bot', 
+                text: trimmedMsg 
+              }]);
+              if (index === parsedAnswer.length - 1) {
+                setIsThinking(false);
+              }
+            }, index * 2000); // Délai de 2 secondes entre chaque message
+          }
+        });
+        setAnswer(''); // Réinitialiser après avoir traité tous les messages
+      } else {
+        const trimmedAnswer = String(parsedAnswer).trim();
+        if (trimmedAnswer) {
+          setMessages(prev => [...prev, { 
+            id: crypto.randomUUID(), 
+            from: 'bot', 
+            text: trimmedAnswer 
+          }]);
+          setIsThinking(false);
+          setAnswer(''); // Réinitialiser pour éviter les re-déclenchements
+        }
+      }
     }
   }, [answer])
 
@@ -177,7 +216,7 @@ export default function ErnestVoiceChat() {
 
       const data = await postToN8n(fd);
       if (data?.answer) {
-        setAnswer(String(data.answer));
+        setAnswer(data.answer); // Peut être string ou string[]
       }
       setStatus("Prêt");
     } catch (e) {

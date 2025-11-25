@@ -2230,9 +2230,32 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       }
       
       appendUser(userText);
-      // Ajouter la réponse assistant
+      // Ajouter la réponse assistant (gestion des tableaux)
       if (data?.answer) {
-        appendAssistant(String(data.answer));
+        let answer = data.answer;
+        // Si answer est une string qui ressemble à un tableau JSON, la parser
+        if (typeof answer === 'string' && answer.trim().startsWith('[') && answer.trim().endsWith(']')) {
+          try {
+            const parsed = JSON.parse(answer);
+            if (Array.isArray(parsed)) {
+              answer = parsed;
+            }
+          } catch (e) {
+            console.warn("Impossible de parser answer comme JSON:", e);
+          }
+        }
+        if (Array.isArray(answer)) {
+          answer.forEach((msg, index) => {
+            const trimmedMsg = String(msg).trim();
+            if (trimmedMsg) {
+              setTimeout(() => {
+                appendAssistant(trimmedMsg);
+              }, index * 2000); // Délai de 2 secondes entre chaque message
+            }
+          });
+        } else {
+          appendAssistant(String(answer));
+        }
       }
       
       // Fermer le mode voix et réinitialiser
@@ -2487,7 +2510,30 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
                 .then((res) => res.json())
                 .then((data) => {
                   if (data?.answer) {
-                    appendAssistant(String(data.answer));
+                    let answer = data.answer;
+                    // Si answer est une string qui ressemble à un tableau JSON, la parser
+                    if (typeof answer === 'string' && answer.trim().startsWith('[') && answer.trim().endsWith(']')) {
+                      try {
+                        const parsed = JSON.parse(answer);
+                        if (Array.isArray(parsed)) {
+                          answer = parsed;
+                        }
+                      } catch (e) {
+                        console.warn("Impossible de parser answer comme JSON:", e);
+                      }
+                    }
+                    if (Array.isArray(answer)) {
+                      answer.forEach((msg, index) => {
+                        const trimmedMsg = String(msg).trim();
+                        if (trimmedMsg) {
+                          setTimeout(() => {
+                            appendAssistant(trimmedMsg);
+                          }, index * 2000); // Délai de 2 secondes entre chaque message
+                        }
+                      });
+                    } else {
+                      appendAssistant(String(answer));
+                    }
                   }
                 })
                 .catch((err) => {

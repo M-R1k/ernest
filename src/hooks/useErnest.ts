@@ -87,10 +87,13 @@ async function postWithRetry(
       TIMEOUT_MS
     );
     const text = await res.text();
+    console.log("🔍 Réponse brute de n8n:", text.substring(0, 200) + "...");
     let data: any = {};
     try {
       data = text ? JSON.parse(text) : {};
-    } catch {
+      console.log("✅ JSON parsé avec succès:", data);
+    } catch (e) {
+      console.error("❌ Erreur de parsing JSON:", e);
       // Accept plain-text fallback as answer
       data = { answer: text };
     }
@@ -98,6 +101,7 @@ async function postWithRetry(
       const message = data?.error || `HTTP ${res.status}`;
       throw new Error(message);
     }
+    console.log("📦 Données finales retournées:", data);
     return data as ErnestApiResponse;
   }
 
@@ -175,6 +179,10 @@ export function useErnest(webhookOverride?: string): ErnestHookReturn {
           subIntent: (subIntent as any) ?? null,
           step,
         },
+        timestamp: now,
+        locale: navigator.language || "fr-FR",
+        userAgent: navigator.userAgent,
+        conversationHistory: stateRef.current.messages.slice(-5), // Derniers 5 messages pour contexte
       };
 
       try {
@@ -183,8 +191,72 @@ export function useErnest(webhookOverride?: string): ErnestHookReturn {
         const nextSessionId = response.sessionId || stateRef.current.sessionId;
         setState((prev) => ({ ...prev, sessionId: nextSessionId }));
 
-        const answerText = response.answer || response.transcript || "";
-        appendMessage({ role: "assistant", text: answerText, ts: Date.now() });
+        // Gestion des erreurs dans la réponse
+        if (response.error) {
+          console.error("Erreur API:", response.error);
+          setError(response.error.message || "Une erreur s'est produite");
+          return;
+        }
+
+        // Log des métadonnées pour débogage
+        if (response.metadata) {
+          console.log("Métadonnées réponse:", response.metadata);
+        }
+
+        // Log des suggestions (pour usage futur)
+        if (response.suggestions && response.suggestions.length > 0) {
+          console.log("Suggestions disponibles:", response.suggestions);
+        }
+
+        let answer = response.answer || response.transcript || "";
+        
+        // Debug: Log de la réponse complète
+        console.log("🔍 Réponse API complète:", response);
+        console.log("🔍 Type de answer initial:", typeof answer, "Est un tableau?", Array.isArray(answer));
+        console.log("🔍 Valeur de answer initial:", answer);
+        
+        // Si answer est une string qui ressemble à un tableau JSON, la parser
+        if (typeof answer === 'string' && answer.trim().startsWith('[') && answer.trim().endsWith(']')) {
+          try {
+            const parsed = JSON.parse(answer);
+            if (Array.isArray(parsed)) {
+              console.log("✅ String JSON parsée en tableau avec", parsed.length, "éléments");
+              answer = parsed;
+            }
+          } catch (e) {
+            console.warn("⚠️ Impossible de parser la string comme JSON:", e);
+          }
+        }
+        
+        // Si answer est un tableau, créer plusieurs messages avec un délai
+        if (Array.isArray(answer)) {
+          console.log("✅ Answer est un tableau avec", answer.length, "éléments");
+          if (answer.length === 0) {
+            console.warn("⚠️ Le tableau answer est vide!");
+          }
+          answer.forEach((msg, index) => {
+            const trimmedMsg = String(msg).trim();
+            console.log(`📝 Message ${index}:`, trimmedMsg.substring(0, 50) + "...");
+            if (trimmedMsg) {
+              setTimeout(() => {
+                appendMessage({ 
+                  role: "assistant", 
+                  text: trimmedMsg, 
+                  ts: Date.now() + index 
+                });
+              }, index * 2000); // Délai de 2 secondes entre chaque message
+            } else {
+              console.warn(`⚠️ Message ${index} est vide après trim`);
+            }
+          });
+        } else {
+          // Comportement normal pour une string
+          console.log("📄 Answer est une string");
+          const answerText = String(answer);
+          if (answerText) {
+            appendMessage({ role: "assistant", text: answerText, ts: Date.now() });
+          }
+        }
       } catch (e: any) {
         setError(
           "Oups, le service est lent ou indisponible. Réessayez dans un instant."

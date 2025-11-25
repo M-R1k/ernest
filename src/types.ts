@@ -64,12 +64,27 @@ export interface ErnestApiRequest {
   sessionId: string;
   chatInput: string;
   meta: ErnestMeta;
+  timestamp?: number;
+  locale?: string;
+  userAgent?: string;
+  conversationHistory?: Array<{ role: Role; text: string; timestamp: number }>;
 }
 
 export interface ErnestApiResponse {
   transcript?: string;
-  answer: string;
+  answer: string | string[];
   sessionId: string;
+  suggestions?: string[];
+  metadata?: {
+    intent?: Intent;
+    subIntent?: SubIntent;
+    confidence?: number;
+    processingTime?: number;
+  };
+  error?: {
+    code?: string;
+    message?: string;
+  };
 }
 
 export interface ErnestState {
