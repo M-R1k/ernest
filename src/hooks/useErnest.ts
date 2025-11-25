@@ -78,39 +78,85 @@ async function postWithRetry(
 ): Promise<ErnestApiResponse> {
   const payload = JSON.stringify(body);
   const headers = { "Content-Type": "application/json" };
-  const TIMEOUT_MS = 12000;
+  const TIMEOUT_MS = 60000; // 60 secondes pour permettre aux workflows n8n longs de se terminer
 
   async function attempt(): Promise<ErnestApiResponse> {
-    const res = await fetchWithTimeout(
-      url,
-      { method: "POST", headers, body: payload },
-      TIMEOUT_MS
-    );
-    const text = await res.text();
-    console.log("🔍 Réponse brute de n8n:", text.substring(0, 200) + "...");
-    let data: any = {};
+    let res: Response;
     try {
-      data = text ? JSON.parse(text) : {};
-      console.log("✅ JSON parsé avec succès:", data);
-    } catch (e) {
-      console.error("❌ Erreur de parsing JSON:", e);
-      // Accept plain-text fallback as answer
-      data = { answer: text };
+      res = await fetchWithTimeout(
+        url,
+        { method: "POST", headers, body: payload },
+        TIMEOUT_MS
+      );
+    } catch (e: any) {
+      // Gestion des erreurs réseau (CORS, timeout, réseau)
+      if (e.name === 'AbortError') {
+        throw new Error(`Le traitement prend plus de ${TIMEOUT_MS / 1000} secondes. Le workflow n8n est peut-être en cours d'exécution, veuillez patienter.`);
+      }
+      if (e.message?.includes('Failed to fetch') || e.message?.includes('NetworkError')) {
+        throw new Error("Impossible de joindre le serveur. Vérifiez votre connexion internet et que le webhook n8n est accessible.");
+      }
+      throw new Error(`Erreur réseau: ${e.message || 'Erreur inconnue'}`);
     }
+    
+    const text = await res.text();
+    console.log("🔍 Réponse brute de n8n:", text.substring(0, 500) + (text.length > 500 ? "..." : ""));
+    
+    let data: any = {};
+    
+    // Vérifier d'abord si la réponse est vide
+    if (!text || text.trim().length === 0) {
+      console.error("❌ Réponse vide de n8n");
+      throw new Error("Le serveur a renvoyé une réponse vide. Vérifiez la configuration du workflow n8n.");
+    }
+    
+    // Nettoyer la réponse si elle contient des caractères invalides
+    let cleanedText = text.trim();
+    
+    // Détecter et corriger les accolades doubles au début
+    if (cleanedText.startsWith('{{')) {
+      console.warn("⚠️ Détection d'accolades doubles au début, tentative de correction...");
+      cleanedText = cleanedText.substring(1); // Enlever une accolade
+    }
+    
+    try {
+      data = JSON.parse(cleanedText);
+      console.log("✅ JSON parsé avec succès:", data);
+    } catch (e: any) {
+      console.error("❌ Erreur de parsing JSON:", e);
+      console.error("❌ Texte qui a échoué:", cleanedText.substring(0, 200));
+      
+      // Si le parsing échoue mais que la réponse HTTP est OK, on accepte le texte brut
+      if (res.ok) {
+        console.warn("⚠️ Réponse HTTP OK mais JSON invalide, utilisation du texte brut comme réponse");
+        data = { answer: text };
+      } else {
+        // Si HTTP n'est pas OK, on lance une erreur
+        throw new Error(`Le serveur a renvoyé un JSON invalide. Erreur: ${e.message}. Réponse reçue: ${cleanedText.substring(0, 100)}...`);
+      }
+    }
+    
     if (!res.ok) {
-      const message = data?.error || `HTTP ${res.status}`;
+      const message = data?.error?.message || data?.error || `HTTP ${res.status}: ${res.statusText}`;
       throw new Error(message);
     }
+    
     console.log("📦 Données finales retournées:", data);
     return data as ErnestApiResponse;
   }
 
   try {
     return await attempt();
-  } catch (e) {
+  } catch (e: any) {
     // One retry with exponential backoff (base ~1s)
+    console.warn("⚠️ Première tentative échouée, nouvelle tentative dans ~1s...", e.message);
     await new Promise((r) => setTimeout(r, 1000 + Math.floor(Math.random() * 300)));
-    return await attempt();
+    try {
+      return await attempt();
+    } catch (retryError: any) {
+      // Si la deuxième tentative échoue aussi, on lance l'erreur
+      throw retryError;
+    }
   }
 }
 
@@ -254,13 +300,42 @@ export function useErnest(webhookOverride?: string): ErnestHookReturn {
           console.log("📄 Answer est une string");
           const answerText = String(answer);
           if (answerText) {
-            appendMessage({ role: "assistant", text: answerText, ts: Date.now() });
+            // Vérifier si le message contient le séparateur "🟪 **Deuxième Message**"
+            const separatorRegex = /🟪\s*\*\*De(?:ux|xui)ième\s+Message\*\*/i;
+            const match = answerText.match(separatorRegex);
+            
+            if (match) {
+              const separatorIndex = match.index!;
+              const firstPart = answerText.substring(0, separatorIndex).trim();
+              const secondPart = answerText.substring(separatorIndex + match[0].length).trim();
+              
+              // Afficher la première partie immédiatement
+              if (firstPart) {
+                appendMessage({ role: "assistant", text: firstPart, ts: Date.now() });
+              }
+              
+              // Afficher la deuxième partie après 2 secondes
+              if (secondPart) {
+                setTimeout(() => {
+                  appendMessage({ role: "assistant", text: secondPart, ts: Date.now() });
+                }, 2000);
+              }
+            } else {
+              // Pas de séparateur, afficher le message normalement
+              appendMessage({ role: "assistant", text: answerText, ts: Date.now() });
+            }
           }
         }
       } catch (e: any) {
-        setError(
-          "Oups, le service est lent ou indisponible. Réessayez dans un instant."
-        );
+        console.error("❌ Erreur dans sendAction:", e);
+        const errorMessage = e?.message || "Oups, le service est lent ou indisponible. Réessayez dans un instant.";
+        setError(errorMessage);
+        // Afficher aussi un message d'assistant pour informer l'utilisateur
+        appendMessage({ 
+          role: "assistant", 
+          text: `Désolé, une erreur s'est produite : ${errorMessage}. Veuillez réessayer.`, 
+          ts: Date.now() 
+        });
       } finally {
         setLoading(false);
       }

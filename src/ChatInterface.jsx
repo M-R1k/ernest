@@ -118,26 +118,72 @@ export default function ChatInterface() {
   }, [])
 
   /**
-   * Fonction pour envoyer des données à l'API N8N
+   * Fonction pour envoyer des données à l'API N8N avec timeout
    */
+  async function fetchWithTimeout(url, options, timeoutMs = 60000) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+      clearTimeout(id);
+    }
+  }
+
   async function postToN8n(fd) {
     if (!N8N_WEBHOOK) {
       console.warn("VITE_N8N_WEBHOOK manquant dans .env");
       return { answer: "Webhook non configuré." };
     }
-    const res = await fetch(N8N_WEBHOOK, { method: "POST", body: fd });
-    const raw = await res.text();
-    let data;
+    
+    const TIMEOUT_MS = 60000; // 60 secondes pour permettre aux workflows n8n longs de se terminer
+    
     try {
-      data = JSON.parse(raw);
-    } catch {
-      data = { answer: raw };
+      const res = await fetchWithTimeout(N8N_WEBHOOK, { method: "POST", body: fd }, TIMEOUT_MS);
+      const raw = await res.text();
+      
+      // Vérifier si la réponse est vide
+      if (!raw || raw.trim().length === 0) {
+        throw new Error("Le serveur a renvoyé une réponse vide");
+      }
+      
+      let data;
+      try {
+        // Nettoyer la réponse si elle contient des caractères invalides
+        let cleanedText = raw.trim();
+        // Détecter et corriger les accolades doubles au début
+        if (cleanedText.startsWith('{{')) {
+          cleanedText = cleanedText.substring(1);
+        }
+        data = JSON.parse(cleanedText);
+      } catch (parseError) {
+        console.error("❌ Erreur de parsing JSON:", parseError);
+        console.error("❌ Texte reçu:", raw.substring(0, 200));
+        // Si le parsing échoue mais que la réponse HTTP est OK, on accepte le texte brut
+        if (res.ok) {
+          console.warn("⚠️ Réponse HTTP OK mais JSON invalide, utilisation du texte brut");
+          data = { answer: raw };
+        } else {
+          throw new Error(`JSON invalide: ${parseError.message}`);
+        }
+      }
+      
+      if (!res.ok) {
+        const errorMsg = data?.error || data?.message || `HTTP ${res.status}: ${res.statusText}`;
+        console.error("Webhook error", res.status, errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      return data;
+    } catch (error) {
+      if (error.name === 'AbortError' || error.message?.includes('timeout')) {
+        throw new Error(`Le traitement prend plus de ${TIMEOUT_MS / 1000} secondes. Le workflow n8n est peut-être en cours d'exécution, veuillez patienter.`);
+      }
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+        throw new Error("Impossible de joindre le serveur. Vérifiez votre connexion internet.");
+      }
+      throw error;
     }
-    if (!res.ok) {
-      console.error("Webhook error", res.status, raw);
-      throw new Error(`HTTP ${res.status}`);
-    }
-    return data;
   }
 
   /**
@@ -178,17 +224,62 @@ export default function ChatInterface() {
     } else {
       const answerText = String(answer);
       if (answerText) {
-        const botResponse = {
-          id: (Date.now() + 1).toString(),
-          from: 'bot',
-          text: answerText,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, botResponse]);
+        // Vérifier si le message contient le séparateur "🟪 **Deuxième Message**"
+        const separatorRegex = /🟪\s*\*\*De(?:ux|xui)ième\s+Message\*\*/i;
+        const match = answerText.match(separatorRegex);
         
-        // Lecture vocale automatique si activée
-        if (voiceMode) {
-          speakText(answerText);
+        if (match) {
+          const separatorIndex = match.index;
+          const firstPart = answerText.substring(0, separatorIndex).trim();
+          const secondPart = answerText.substring(separatorIndex + match[0].length).trim();
+          
+          // Afficher la première partie immédiatement
+          if (firstPart) {
+            const botResponse1 = {
+              id: (Date.now() + 1).toString(),
+              from: 'bot',
+              text: firstPart,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, botResponse1]);
+            
+            // Lecture vocale automatique si activée
+            if (voiceMode) {
+              speakText(firstPart);
+            }
+          }
+          
+          // Afficher la deuxième partie après 2 secondes
+          if (secondPart) {
+            setTimeout(() => {
+              const botResponse2 = {
+                id: (Date.now() + 2000).toString(),
+                from: 'bot',
+                text: secondPart,
+                timestamp: new Date()
+              };
+              setMessages(prev => [...prev, botResponse2]);
+              
+              // Lecture vocale automatique si activée
+              if (voiceMode) {
+                speakText(secondPart);
+              }
+            }, 2000);
+          }
+        } else {
+          // Pas de séparateur, afficher le message normalement
+          const botResponse = {
+            id: (Date.now() + 1).toString(),
+            from: 'bot',
+            text: answerText,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, botResponse]);
+          
+          // Lecture vocale automatique si activée
+          if (voiceMode) {
+            speakText(answerText);
+          }
         }
       }
     }
@@ -238,8 +329,16 @@ export default function ChatInterface() {
       
       const data = await postToN8n(fd);
       
-      if (data?.answer) {
-        addBotMessages(data.answer);
+      // Mettre à jour le sessionId si fourni dans la réponse
+      if (data?.sessionId && data.sessionId !== sessionId) {
+        localStorage.setItem("ernest_session", data.sessionId);
+      }
+      
+      // Utiliser answer ou transcript (n8n peut renvoyer l'un ou l'autre)
+      const responseText = data?.answer || data?.transcript || "";
+      
+      if (responseText) {
+        addBotMessages(responseText);
       }
     } catch (error) {
       console.error('Erreur lors de l\'envoi:', error)
@@ -399,8 +498,17 @@ export default function ChatInterface() {
       fd.append('sessionId', sessionId)
 
       const data = await postToN8n(fd);
-      if (data?.answer) {
-        addBotMessages(data.answer);
+      
+      // Mettre à jour le sessionId si fourni dans la réponse
+      if (data?.sessionId && data.sessionId !== sessionId) {
+        localStorage.setItem("ernest_session", data.sessionId);
+      }
+      
+      // Utiliser answer ou transcript (n8n peut renvoyer l'un ou l'autre)
+      const responseText = data?.answer || data?.transcript || "";
+      
+      if (responseText) {
+        addBotMessages(responseText);
       }
       setStatus("Prêt");
     } catch (e) {
@@ -454,8 +562,17 @@ export default function ChatInterface() {
         },
       ])
       setIsThinking(true)
-      if (data?.answer) {
-        addBotMessages(data.answer);
+      
+      // Mettre à jour le sessionId si fourni dans la réponse
+      if (data?.sessionId && data.sessionId !== sessionId) {
+        localStorage.setItem("ernest_session", data.sessionId);
+      }
+      
+      // Utiliser answer ou transcript (n8n peut renvoyer l'un ou l'autre)
+      const responseText = data?.answer || data?.transcript || "";
+      
+      if (responseText) {
+        addBotMessages(responseText);
       }
       setAttachedFiles([])
       setStatus('Prêt')

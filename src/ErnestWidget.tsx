@@ -4,7 +4,6 @@ import useErnest from "./hooks/useErnest";
 import type { ErnestWidgetProps, Intent, SubIntent, SendActionArgs, ChatMessage, SosSubIntent } from "./types";
 import { ariaButtonProps, onActivate, focusFirstInteractive } from "./utils/accessibility";
 import ReactMarkdown from 'react-markdown';
-import logoErnest from "./assets/logo-ernest.png";
 
 // Composant VoiceModeOverlay - Mode voix amélioré avec visualisation et transcription
 type VoiceModeOverlayProps = {
@@ -529,6 +528,39 @@ function VoiceModeOverlay({
 
 type Screen = "home" | "sos" | "chat";
 
+/**
+ * Fonction pour diviser un message contenant le séparateur "🟪 **Deuxième Message**" en deux parties
+ * et les afficher avec un délai de 2 secondes entre elles
+ */
+function handleSplitMessage(text: string, appendFn: (text: string) => void) {
+  // Chercher le séparateur (gérer la faute de frappe "Dexuième" aussi)
+  const separatorRegex = /🟪\s*\*\*De(?:ux|xui)ième\s+Message\*\*/i;
+  const match = text.match(separatorRegex);
+  
+  if (match) {
+    const separatorIndex = match.index!;
+    const firstPart = text.substring(0, separatorIndex).trim();
+    const secondPart = text.substring(separatorIndex + match[0].length).trim();
+    
+    // Afficher la première partie immédiatement
+    if (firstPart) {
+      appendFn(firstPart);
+    }
+    
+    // Afficher la deuxième partie après 2 secondes
+    if (secondPart) {
+      setTimeout(() => {
+        appendFn(secondPart);
+      }, 2000);
+    }
+    return true; // Indique que le message a été divisé
+  }
+  
+  // Pas de séparateur, afficher le message normalement
+  appendFn(text);
+  return false;
+}
+
 const ALL_INTENTS: Array<{ key: Intent; label: string; icon: string }> = [
   { key: "SECURE_ACCOUNTS", label: "Je sécurise mes comptes en ligne", icon: "🔐" },
   { key: "CHECK_SCAM", label: "Je vérifie si c’est une arnaque", icon: "🕵️" },
@@ -981,12 +1013,8 @@ function TopBar({ onBack, onMenu, onReset }: { onBack: () => void; onMenu: () =>
       >
         <span aria-hidden className="text-base md:text-xl">←</span>
       </button>
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
-        <img 
-          src={logoErnest} 
-          alt="Ernest" 
-          className="h-8 md:h-10 w-auto"
-        />
+      <div className="absolute left-1/2 -translate-x-1/2 text-[16px] md:text-[18px] font-semibold text-gray-900 text-center">
+        Vérificateur de messages
       </div>
       <div className="flex items-center gap-2 md:gap-3">
         <button
@@ -1891,18 +1919,21 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     setStepIndex(0);
   }
 
-  // Ajouter le message de bienvenue au démarrage si la conversation est vide
+  // Ajouter le message de bienvenue au démarrage si la conversation est vide (une seule fois)
   const welcomeMessage = "Bonjour ! Je vais vous aider à vérifier si le message que vous avez reçu est fiable.\n\nCopiez votre message ici, ou téléchargez le pour que je l'analyse pour vous.";
+  
   useEffect(() => {
-    // Vérifier si la conversation est vide et qu'il n'y a pas déjà un message de bienvenue
+    // Vérifier si un message de bienvenue existe déjà
     const hasWelcomeMessage = messages.some(m => 
       m.role === "assistant" && 
       m.text.includes("Bonjour ! Je vais vous aider à vérifier")
     );
+    
+    // Ajouter le message seulement si pas déjà présent et conversation vide
     if (messages.length === 0 && !hasWelcomeMessage) {
       appendAssistant(welcomeMessage);
     }
-  }, [messages.length, appendAssistant]); // Vérifier seulement quand le nombre de messages change
+  }, [messages.length]); // Surveiller seulement messages.length pour éviter les déclenchements multiples
 
   const conversation: ChatMessage[] = useMemo(() => {
     return messages;
@@ -2188,7 +2219,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     await stopTranscription();
   }
 
-  async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 12000): Promise<Response> {
+  async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 60000): Promise<Response> {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -2219,17 +2250,44 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
       const res = await fetchWithTimeout(webhookUrl, { method: "POST", body: fd });
       const raw = await res.text();
+      
+      // Vérifier si la réponse est vide
+      if (!raw || raw.trim().length === 0) {
+        throw new Error("Le serveur a renvoyé une réponse vide");
+      }
+      
       let data: any;
       try {
-        data = JSON.parse(raw);
-      } catch {
-        data = { answer: raw };
+        // Nettoyer la réponse si elle contient des caractères invalides
+        let cleanedText = raw.trim();
+        // Détecter et corriger les accolades doubles au début
+        if (cleanedText.startsWith('{{')) {
+          cleanedText = cleanedText.substring(1);
+        }
+        data = JSON.parse(cleanedText);
+      } catch (parseError: any) {
+        console.error("❌ Erreur de parsing JSON:", parseError);
+        console.error("❌ Texte reçu:", raw.substring(0, 200));
+        // Si le parsing échoue mais que la réponse HTTP est OK, on accepte le texte brut
+        if (res.ok) {
+          console.warn("⚠️ Réponse HTTP OK mais JSON invalide, utilisation du texte brut");
+          data = { answer: raw };
+        } else {
+          throw new Error(`JSON invalide: ${parseError.message}`);
+        }
       }
+      
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
+        const errorMsg = data?.error || data?.message || `HTTP ${res.status}: ${res.statusText}`;
+        throw new Error(errorMsg);
       }
 
       emitTelemetry({ type: "voice_sent", intent: intent || undefined, subIntent: subIntent || undefined, step: stepIndex });
+      
+      // Mettre à jour le sessionId si fourni dans la réponse
+      if (data?.sessionId && data.sessionId !== sessionId) {
+        localStorage.setItem("ernest_session", data.sessionId);
+      }
       
       // Utiliser la transcription locale si disponible, sinon celle du serveur
       const localTranscript = voiceTranscription.replace(/\s*\[.*\]$/, "").trim();
@@ -2250,9 +2308,12 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       }
       
       appendUser(userText);
+      // Utiliser answer ou transcript pour la réponse (n8n peut renvoyer l'un ou l'autre)
+      const responseText = data?.answer || (data?.transcript && !serverTranscript ? data.transcript : null) || "";
+      
       // Ajouter la réponse assistant (gestion des tableaux)
-      if (data?.answer) {
-        let answer = data.answer;
+      if (responseText) {
+        let answer = responseText;
         // Si answer est une string qui ressemble à un tableau JSON, la parser
         if (typeof answer === 'string' && answer.trim().startsWith('[') && answer.trim().endsWith(']')) {
           try {
@@ -2274,7 +2335,8 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
             }
           });
         } else {
-          appendAssistant(String(answer));
+          // Gérer le séparateur "🟪 **Deuxième Message**"
+          handleSplitMessage(String(answer), appendAssistant);
         }
       }
       
@@ -2485,10 +2547,50 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
                 method: "POST",
                 body: formData,
               })
-                .then((res) => res.json())
+                .then(async (res) => {
+                  const raw = await res.text();
+                  
+                  if (!raw || raw.trim().length === 0) {
+                    throw new Error("Le serveur a renvoyé une réponse vide");
+                  }
+                  
+                  let data: any;
+                  try {
+                    // Nettoyer la réponse si elle contient des caractères invalides
+                    let cleanedText = raw.trim();
+                    if (cleanedText.startsWith('{{')) {
+                      cleanedText = cleanedText.substring(1);
+                    }
+                    data = JSON.parse(cleanedText);
+                  } catch (parseError: any) {
+                    console.error("❌ Erreur de parsing JSON:", parseError);
+                    console.error("❌ Texte reçu:", raw.substring(0, 200));
+                    if (res.ok) {
+                      console.warn("⚠️ Réponse HTTP OK mais JSON invalide, utilisation du texte brut");
+                      data = { answer: raw };
+                    } else {
+                      throw new Error(`JSON invalide: ${parseError.message}`);
+                    }
+                  }
+                  
+                  if (!res.ok) {
+                    const errorMsg = data?.error || data?.message || `HTTP ${res.status}: ${res.statusText}`;
+                    throw new Error(errorMsg);
+                  }
+                  
+                  return data;
+                })
                 .then((data) => {
-                  if (data?.answer) {
-                    let answer = data.answer;
+                  // Mettre à jour le sessionId si fourni dans la réponse
+                  if (data?.sessionId && data.sessionId !== sessionId) {
+                    localStorage.setItem("ernest_session", data.sessionId);
+                  }
+                  
+                  // Utiliser answer ou transcript (n8n peut renvoyer l'un ou l'autre)
+                  const responseText = data?.answer || data?.transcript || "";
+                  
+                  if (responseText) {
+                    let answer = responseText;
                     // Si answer est une string qui ressemble à un tableau JSON, la parser
                     if (typeof answer === 'string' && answer.trim().startsWith('[') && answer.trim().endsWith(']')) {
                       try {
@@ -2510,7 +2612,8 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
                         }
                       });
                     } else {
-                      appendAssistant(String(answer));
+                      // Gérer le séparateur "🟪 **Deuxième Message**"
+                      handleSplitMessage(String(answer), appendAssistant);
                     }
                   }
                 })
