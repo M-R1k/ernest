@@ -1921,6 +1921,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
   // Ajouter le message de bienvenue au démarrage si la conversation est vide (une seule fois)
   const welcomeMessage = "Bonjour ! Je vais vous aider à vérifier si le message que vous avez reçu est fiable.\n\nCopiez votre message ici, ou téléchargez le pour que je l'analyse pour vous.";
+  const isAddingWelcomeRef = useRef(false);
   
   useEffect(() => {
     // Vérifier si un message de bienvenue existe déjà
@@ -1929,11 +1930,24 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       m.text.includes("Bonjour ! Je vais vous aider à vérifier")
     );
     
-    // Ajouter le message seulement si pas déjà présent et conversation vide
-    if (messages.length === 0 && !hasWelcomeMessage) {
-      appendAssistant(welcomeMessage);
+    // Si le message existe déjà ou si on est en train de l'ajouter, ne rien faire
+    if (hasWelcomeMessage || isAddingWelcomeRef.current) {
+      if (hasWelcomeMessage) {
+        isAddingWelcomeRef.current = false;
+      }
+      return;
     }
-  }, [messages.length]); // Surveiller seulement messages.length pour éviter les déclenchements multiples
+    
+    // Si la conversation est vide et qu'il n'y a pas de message de bienvenue, l'ajouter
+    if (messages.length === 0) {
+      isAddingWelcomeRef.current = true;
+      appendAssistant(welcomeMessage);
+      // Réinitialiser après un court délai
+      setTimeout(() => {
+        isAddingWelcomeRef.current = false;
+      }, 100);
+    }
+  }, [messages.length, messages, appendAssistant, welcomeMessage]);
 
   const conversation: ChatMessage[] = useMemo(() => {
     return messages;
