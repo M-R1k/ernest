@@ -4,6 +4,7 @@ import useErnest from "./hooks/useErnest";
 import type { ErnestWidgetProps, Intent, SubIntent, SendActionArgs, ChatMessage, SosSubIntent } from "./types";
 import { ariaButtonProps, onActivate, focusFirstInteractive } from "./utils/accessibility";
 import ReactMarkdown from 'react-markdown';
+import logoErnest from "./assets/logo-ernest.png";
 
 // Composant VoiceModeOverlay - Mode voix amélioré avec visualisation et transcription
 type VoiceModeOverlayProps = {
@@ -980,7 +981,13 @@ function TopBar({ onBack, onMenu, onReset }: { onBack: () => void; onMenu: () =>
       >
         <span aria-hidden className="text-base md:text-xl">←</span>
       </button>
-      <div className="absolute left-1/2 -translate-x-1/2 text-[20px] md:text-[22px] font-semibold text-gray-900">Ernest</div>
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
+        <img 
+          src={logoErnest} 
+          alt="Ernest" 
+          className="h-8 md:h-10 w-auto"
+        />
+      </div>
       <div className="flex items-center gap-2 md:gap-3">
         <button
           type="button"
@@ -1884,6 +1891,19 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     setStepIndex(0);
   }
 
+  // Ajouter le message de bienvenue au démarrage si la conversation est vide
+  const welcomeMessage = "Bonjour ! Je vais vous aider à vérifier si le message que vous avez reçu est fiable.\n\nCopiez votre message ici, ou téléchargez le pour que je l'analyse pour vous.";
+  useEffect(() => {
+    // Vérifier si la conversation est vide et qu'il n'y a pas déjà un message de bienvenue
+    const hasWelcomeMessage = messages.some(m => 
+      m.role === "assistant" && 
+      m.text.includes("Bonjour ! Je vais vous aider à vérifier")
+    );
+    if (messages.length === 0 && !hasWelcomeMessage) {
+      appendAssistant(welcomeMessage);
+    }
+  }, [messages.length, appendAssistant]); // Vérifier seulement quand le nombre de messages change
+
   const conversation: ChatMessage[] = useMemo(() => {
     return messages;
   }, [messages]);
@@ -2292,14 +2312,6 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
       {/* Conversation area - toujours visible */}
       <div className="flex flex-1 flex-col gap-3 md:gap-5 px-3 md:px-6 py-4 md:py-3 overflow-y-auto min-h-0 pb-8 md:pb-4">
-          {/* Message central d'accueil */}
-          {conversation.length === 0 && (
-            <div className="flex w-full flex-1 items-center justify-center pt-8 md:pt-12">
-              <p className="w-full max-w-screen-sm md:max-w-screen-md text-center text-gray-900 text-[15px] md:text-[18px] font-normal">
-                Sélectionnez un sujet et commençons.
-              </p>
-            </div>
-          )}
           {/* Safety banner */}
           {showBannerUrl && (
             <div className="mx-auto w-full max-w-screen-sm md:max-w-screen-md rounded-xl bg-amber-50 p-4 md:p-5 text-amber-900 ring-1 ring-inset ring-amber-200">
@@ -2373,41 +2385,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           </div>
         </div>
 
-      {/* Boutons juste au-dessus de l'input (bas de page) */}
-      <div className="px-3 md:px-6">
-        {screen === "home" && composerText.length === 0 && conversation.length === 0 && attachedFiles.length === 0 && (
-          <div className="mx-auto mb-2 md:mb-3 mt-16 md:mt-20 w-full max-w-screen-sm md:max-w-screen-md">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-2.5">
-              {ALL_INTENTS.map((i) => (
-                <button
-                  key={i.key}
-                  type="button"
-                  onClick={() => handleSelectIntent(i.key)}
-                  className="inline-flex min-h-[36px] md:min-h-[40px] items-center justify-center rounded-xl bg-white px-2.5 md:px-3 py-1.5 md:py-2 text-[14px] md:text-[15px] text-gray-800 shadow-sm ring-1 ring-inset ring-gray-200 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
-                >
-                  {i.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        {screen === "sos" && (
-          <div className="mx-auto mb-2 md:mb-3 w-full max-w-screen-sm md:max-w-screen-md">
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-3">
-              {SOS_OPTIONS.map((o) => (
-                <button
-                  key={o.key}
-                  type="button"
-                  onClick={() => handleSelectSubIntent(o.key)}
-                  className="inline-flex min-h-[44px] md:min-h-[52px] items-center justify-center rounded-2xl bg-white px-3 md:px-4 py-2 md:py-2.5 text-[16px] md:text-[17px] text-gray-800 shadow-sm ring-1 ring-inset ring-gray-200 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
-                >
-                  {o.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Boutons juste au-dessus de l'input (bas de page) - Désactivés */}
 
       {/* Bottom composer present on all screens */}
       <Composer

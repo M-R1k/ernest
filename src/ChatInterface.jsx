@@ -536,11 +536,11 @@ export default function ChatInterface() {
     localStorage.setItem("ernest_session", newId);
     setMessages([
       { 
-        id: crypto.randomUUID(), 
-        from: "bot", 
+        id: 'welcome', 
+        from: 'bot', 
         text: WELCOME_MESSAGE,
         timestamp: new Date()
-      },
+      }
     ]);
     setStatus("Prêt");
   };
