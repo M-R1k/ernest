@@ -36,3 +36,4 @@ export function hasSecondMessageSeparator(text?: string | null): boolean {
   return SECOND_MESSAGE_REGEX.test(text);
 }
 
+
