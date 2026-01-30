@@ -8,7 +8,7 @@ const DEFAULT_N8N_WEBHOOK = 'https://clic-et-moi.app.n8n.cloud/webhook/soscyber2
 const N8N_WEBHOOK = import.meta.env.VITE_N8N_WEBHOOK || DEFAULT_N8N_WEBHOOK
 
 // Message de bienvenue
-const WELCOME_MESSAGE = 'Bonjour ! Je vais vous aider à vérifier si le message que vous avez reçu est fiable.\n\nCopiez votre message ici, ou téléchargez le pour que je l\'analyse pour vous.'
+const WELCOME_MESSAGE = 'Bonjour ! Je vais vous aider à vérifier si le message que vous avez reçu est fiable.\n\nCopiez votre message ici pour que je l\'analyse pour vous.'
 
 /**
  * Interface WYSIWYG de chatbot ultra-accessible dédiée aux seniors

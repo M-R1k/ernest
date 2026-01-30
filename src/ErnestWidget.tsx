@@ -971,7 +971,7 @@ function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choic
   );
 }
 
-function TopBar({ onBack, onMenu, onReset }: { onBack: () => void; onMenu: () => void; onReset: () => void }) {
+function TopBar({ onBack }: { onBack: () => void }) {
   return (
     <header className="relative flex items-center justify-between px-3 md:px-6 py-2.5 md:py-4">
       <button
@@ -985,25 +985,7 @@ function TopBar({ onBack, onMenu, onReset }: { onBack: () => void; onMenu: () =>
       <div className="absolute left-1/2 -translate-x-1/2 text-[16px] md:text-[18px] font-semibold text-gray-900 text-center">
         Vérificateur de messages
       </div>
-      <div className="flex items-center gap-2 md:gap-3">
-        <button
-          type="button"
-          onClick={onReset}
-          className="grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
-          aria-label="Effacer la conversation"
-          title="Effacer la conversation"
-        >
-          <TrashIcon className="h-4 w-4 md:h-5 md:w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onMenu}
-          className="grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
-          aria-label="Menu"
-        >
-          <span aria-hidden className="text-base md:text-xl">≡</span>
-        </button>
-      </div>
+      <div className="h-9 w-9 md:h-12 md:w-12" aria-hidden />
     </header>
   );
 }
@@ -1070,8 +1052,6 @@ type ComposerProps = {
   value: string;
   onChange: (v: string) => void;
   onSend: () => void;
-  onVoice: () => void;
-  onFileAttach: (files: File[]) => void;
   attachedFiles: File[];
   onRemoveFile: (index: number) => void;
   onFocus?: () => void;
@@ -1169,14 +1149,10 @@ function Composer({
   value,
   onChange,
   onSend,
-  onVoice,
-  onFileAttach,
   attachedFiles,
   onRemoveFile,
   onFocus,
 }: ComposerProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   return (
     <div className="w-full px-3 md:px-6 py-2.5 md:py-4">
       {/* Affichage des fichiers joints */}
@@ -1208,51 +1184,6 @@ function Composer({
           aria-label="Posez votre question"
           className="flex-1 bg-transparent text-[15px] md:text-[18px] outline-none placeholder:text-gray-500"
         />
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
-          onChange={(e) => {
-            if (e.target.files && e.target.files.length > 0) {
-              const filesArray = Array.from(e.target.files);
-              onFileAttach(filesArray);
-              // Réinitialiser l'input pour permettre de sélectionner le même fichier à nouveau
-              if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-              }
-            }
-          }}
-        />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className={`relative grid h-10 w-10 md:h-12 md:w-12 flex-shrink-0 place-items-center rounded-full bg-gray-600 text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 ${
-            attachedFiles.length > 0 ? 'ring-2 ring-blue-300' : ''
-          }`}
-          aria-label="Joindre des fichiers"
-          title={attachedFiles.length > 0 ? `${attachedFiles.length} fichier(s) joint(s)` : "Joindre des fichiers"}
-        >
-          <svg className="h-6 w-6 md:h-7 md:w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="17 8 12 3 7 8" />
-            <line x1="12" y1="3" x2="12" y2="15" />
-          </svg>
-          {attachedFiles.length > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 md:h-6 md:w-6 rounded-full bg-blue-700 text-white text-[10px] md:text-[11px] font-bold flex items-center justify-center shadow-md ring-2 ring-white">
-              {attachedFiles.length > 9 ? '9+' : attachedFiles.length}
-            </span>
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={onVoice}
-          className="grid h-10 w-10 md:h-14 md:w-14 flex-shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50"
-          aria-label="Mode Voix"
-        >
-          <SendWavesIcon className="h-6 w-6 md:h-9 md:w-9" />
-        </button>
         <button
           type="button"
           onClick={onSend}
@@ -1911,7 +1842,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
   }
 
   // Ajouter le message de bienvenue au démarrage si la conversation est vide (une seule fois)
-  const welcomeMessage = "Bonjour ! Je vais vous aider à vérifier si le message que vous avez reçu est fiable.\n\nCopiez votre message ici, ou téléchargez le pour que je l'analyse pour vous.";
+  const welcomeMessage = "Bonjour ! Je vais vous aider à vérifier si le message que vous avez reçu est fiable.\n\nCopiez votre message ici pour que je l'analyse pour vous.";
   const isAddingWelcomeRef = useRef(false);
   
   useEffect(() => {
@@ -2370,20 +2301,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
   return (
     <section ref={containerRef} className="flex h-screen w-full flex-col bg-white text-[16px] md:text-[19px] overflow-hidden">
-      <TopBar
-        onBack={handleBack}
-        onMenu={() => { /* menu plus tard */ }}
-        onReset={() => {
-          reset();
-          setIntent(null);
-          setSubIntent(null);
-          setStepIndex(0);
-          setShowBannerUrl(null);
-          setAttachedFiles([]);
-          setComposerText("");
-          emitTelemetry({ type: "reset" });
-        }}
-      />
+      <TopBar onBack={handleBack} />
 
       {/* Home screen top section supprimée pour placer les boutons en bas */}
       {false && screen === "home" && <div />}
@@ -2692,44 +2610,6 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
           const effectiveStep = stepIndex > 0 ? stepIndex : 1;
           sendAction({ intent: effectiveIntent, subIntent: effectiveSub, step: effectiveStep, text: msg });
           setComposerText("");
-        }}
-        onVoice={() => {
-          // Envoyer un message au parent (WeWeb) pour demander la permission micro
-          // Le parent gérera la permission et renverra "open_voice_mode" à React
-          console.log("Demande de permission micro envoyée au parent (WeWeb)");
-          
-          try {
-            // Essayer d'envoyer au parent
-            if (window.parent && window.parent !== window) {
-              window.parent.postMessage(
-                { type: "request_mic_permission" },
-                "*"
-              );
-            } else {
-              // Si on n'est pas dans une iframe, ouvrir directement le mode voix
-              console.log("Pas dans une iframe, ouverture directe du mode voix");
-              setVoiceMode(true);
-              emitTelemetry({ 
-                type: "voice_open", 
-                intent: intent || undefined, 
-                subIntent: subIntent || undefined, 
-                step: stepIndex 
-              });
-            }
-          } catch (e) {
-            console.error("Erreur lors de l'envoi du message au parent:", e);
-            // Fallback : ouvrir directement le mode voix
-            setVoiceMode(true);
-            emitTelemetry({ 
-              type: "voice_open", 
-              intent: intent || undefined, 
-              subIntent: subIntent || undefined, 
-              step: stepIndex 
-            });
-          }
-        }}
-        onFileAttach={(files) => {
-          setAttachedFiles((prev) => [...prev, ...files]);
         }}
         attachedFiles={attachedFiles}
         onRemoveFile={(index) => {
