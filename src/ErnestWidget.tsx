@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useErnest from "./hooks/useErnest";
 import { useThinkingSteps } from "./hooks/useThinkingSteps";
@@ -777,7 +778,7 @@ function UserAvatar({
 // Composant Avatar pour le chatbot (Ernest)
 function BotAvatar() {
   return (
-    <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-300 flex items-center justify-center shadow-md ring-2 ring-white relative">
+    <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#3B82F6] flex items-center justify-center shadow-md ring-2 ring-white relative">
       <svg 
         className="w-5 h-5 md:w-6 md:h-6" 
         viewBox="0 0 24 24"
@@ -971,21 +972,31 @@ function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choic
   );
 }
 
-function TopBar({ onBack }: { onBack: () => void }) {
+function TopBar({ onBack, onRestart }: { onBack: () => void; onRestart: () => void }) {
   return (
-    <header className="relative flex items-center justify-between px-3 md:px-6 py-2.5 md:py-4">
+    <header className="relative flex h-[100px] items-center justify-between bg-[#3B82F6] px-3 md:px-6">
       <button
         type="button"
         onClick={onBack}
-        className="grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-gray-100 text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+        className="grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-white text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
         aria-label="Retour"
       >
         <span aria-hidden className="text-base md:text-xl">←</span>
       </button>
-      <div className="absolute left-1/2 -translate-x-1/2 text-[16px] md:text-[18px] font-semibold text-gray-900 text-center">
+      <div className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold text-white text-center">
         Vérificateur de messages
       </div>
-      <div className="h-9 w-9 md:h-12 md:w-12" aria-hidden />
+      <button
+        type="button"
+        onClick={onRestart}
+        className="grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-white text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+        aria-label="Recommencer la conversation"
+      >
+        <svg className="h-4 w-4 md:h-5 md:w-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+          <path d="M1 4v6h6" />
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+        </svg>
+      </button>
     </header>
   );
 }
@@ -1188,7 +1199,7 @@ function Composer({
           type="button"
           onClick={onSend}
           disabled={!value.trim() && attachedFiles.length === 0}
-          className="grid h-10 w-10 md:h-14 md:w-14 flex-shrink-0 place-items-center rounded-full bg-green-600 text-white shadow-md transition hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="grid h-10 w-10 md:h-14 md:w-14 flex-shrink-0 place-items-center rounded-full bg-[#3B82F6] text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Envoyer"
         >
           <svg className="h-6 w-6 md:h-9 md:w-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -1834,6 +1845,31 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
     setStepIndex(0);
   }
 
+  function handleRestartConversation() {
+    // Mettre à jour les refs immédiatement pour éviter tout état incohérent
+    intentRef.current = null;
+    subIntentRef.current = null;
+    stepIndexRef.current = 0;
+    isAddingWelcomeRef.current = false;
+    // Forcer le reset du hook (messages + session) avant les autres setState
+    flushSync(() => {
+      reset();
+    });
+    setScreen("chat");
+    setIntent(null);
+    setSubIntent(null);
+    setStepIndex(0);
+    setShowBannerUrl(null);
+    setComposerText("");
+    setAttachedFiles([]);
+    setMessageFiles({});
+    setVoiceMode(false);
+    setRecording(false);
+    setVoiceStatus("Prêt");
+    setVoiceTranscription("");
+    setFinalTranscription("");
+  }
+
   function handleHome() {
     setScreen("home");
     setIntent(null);
@@ -2301,7 +2337,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
   return (
     <section ref={containerRef} className="flex h-screen w-full flex-col bg-white text-[16px] md:text-[19px] overflow-hidden">
-      <TopBar onBack={handleBack} />
+      <TopBar onBack={handleBack} onRestart={handleRestartConversation} />
 
       {/* Home screen top section supprimée pour placer les boutons en bas */}
       {false && screen === "home" && <div />}
