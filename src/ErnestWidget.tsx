@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 import useErnest from "./hooks/useErnest";
 import { useThinkingSteps } from "./hooks/useThinkingSteps";
 import type { ErnestWidgetProps, Intent, SubIntent, SendActionArgs, ChatMessage, SosSubIntent } from "./types";
@@ -829,7 +830,7 @@ function Bubble({
       className={`max-w-[85%] md:max-w-[75%] whitespace-pre-wrap rounded-2xl px-3 md:px-5 py-2 md:py-4 ${
         isUser
           ? "bg-white text-gray-900 shadow-lg"
-          : "bg-gray-100 text-gray-900 ring-1 ring-inset ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700"
+          : "bg-gray-100 text-gray-900 ring-1 ring-inset ring-gray-200"
       }`}
       aria-live={isUser ? undefined : "polite"}
     >
@@ -901,7 +902,7 @@ function Bubble({
         </div>
       ) : (
         // 🤖 Les messages d'Ernest sont rendus avec Markdown
-        <div className="prose prose-sm prose-gray dark:prose-invert max-w-none">
+        <div className="prose prose-sm prose-gray max-w-none">
           <ReactMarkdown
             components={{
               p: ({ children }) => <p className="mb-2">{children}</p>,
@@ -981,9 +982,9 @@ function TopBar({ onBack, onRestart }: { onBack: () => void; onRestart: () => vo
         className="grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-white text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
         aria-label="Retour"
       >
-        <span aria-hidden className="text-base md:text-xl">←</span>
+        <ArrowLeft aria-hidden className="h-4 w-4 md:h-5 md:w-5" />
       </button>
-      <div className="absolute left-1/2 -translate-x-1/2 text-[20px] font-semibold text-white text-center">
+      <div className="absolute left-1/2 -translate-x-1/2 text-[18px] font-semibold text-white text-center">
         Vérificateur de messages
       </div>
       <button
@@ -1003,7 +1004,7 @@ function TopBar({ onBack, onRestart }: { onBack: () => void; onRestart: () => vo
 
 function StickyBar({ onBack, onHome, onContact, onReminder }: { onBack: () => void; onHome: () => void; onContact: () => void; onReminder: () => void }) {
   return (
-    <div className="sticky bottom-0 z-10 w-full border-t border-gray-200 bg-white/95 px-4 md:px-6 py-3 md:py-4 backdrop-blur dark:border-gray-800 dark:bg-gray-950/95">
+    <div className="sticky bottom-0 z-10 w-full border-t border-gray-200 bg-white/95 px-4 md:px-6 py-3 md:py-4 backdrop-blur">
       <div className="mx-auto flex max-w-screen-lg items-center justify-between gap-2 md:gap-3">
         <div className="flex items-center gap-2 md:gap-3">
           <button type="button" onClick={onBack} className="min-h-[48px] md:min-h-[52px] rounded-xl bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300">

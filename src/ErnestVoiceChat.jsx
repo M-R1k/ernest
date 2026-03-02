@@ -343,14 +343,14 @@ export default function ErnestVoiceChat() {
 
   return (
     <section className={`flex h-dvh w-screen flex-col ${fontSizeClass}`}>
-      <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-950">
+      <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Ernest</h1>
           <span
             className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ring-1 ring-inset
-              ${recording ? 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900' :
-                sending ? 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900' :
-                  'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900'}`}
+              ${recording ? 'bg-red-50 text-red-700 ring-red-200' :
+                sending ? 'bg-amber-50 text-amber-700 ring-amber-200' :
+                  'bg-emerald-50 text-emerald-700 ring-emerald-200'}`}
             role="status"
             aria-live="polite"
           >
@@ -360,13 +360,13 @@ export default function ErnestVoiceChat() {
         </div>
 
         <div className="inline-flex items-center gap-2">
-          <span className="text-sm text-gray-600 dark:text-gray-300">Taille du texte</span>
-          <div className="inline-flex overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
+          <span className="text-sm text-gray-600">Taille du texte</span>
+          <div className="inline-flex overflow-hidden rounded-lg border border-gray-300">
             <button
               type="button"
               onClick={() => setFontStep(0)}
               className={`px-3 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300
-                ${fontStep === 0 ? 'bg-gray-200 dark:bg-gray-700' : 'bg-white dark:bg-gray-900'}`}
+                ${fontStep === 0 ? 'bg-gray-200' : 'bg-white'}`}
               aria-pressed={fontStep === 0}
               aria-label="Texte grand"
             >
@@ -376,7 +376,7 @@ export default function ErnestVoiceChat() {
               type="button"
               onClick={() => setFontStep(1)}
               className={`px-3 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300
-                ${fontStep === 1 ? 'bg-gray-200 dark:bg-gray-700' : 'bg-white dark:bg-gray-900'}`}
+                ${fontStep === 1 ? 'bg-gray-200' : 'bg-white'}`}
               aria-pressed={fontStep === 1}
               aria-label="Texte très grand"
             >
@@ -386,7 +386,7 @@ export default function ErnestVoiceChat() {
               type="button"
               onClick={() => setFontStep(2)}
               className={`px-3 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300
-                ${fontStep === 2 ? 'bg-gray-200 dark:bg-gray-700' : 'bg-white dark:bg-gray-900'}`}
+                ${fontStep === 2 ? 'bg-gray-200' : 'bg-white'}`}
               aria-pressed={fontStep === 2}
               aria-label="Texte énorme"
             >
@@ -397,7 +397,7 @@ export default function ErnestVoiceChat() {
           <button
             type="button"
             onClick={handleClear}
-            className="ml-2 rounded-lg bg-gray-100 px-3 py-2 text-gray-800 shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+            className="ml-2 rounded-lg bg-gray-100 px-3 py-2 text-gray-800 shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
             aria-label="Effacer la conversation"
           >
             Effacer
@@ -406,7 +406,7 @@ export default function ErnestVoiceChat() {
       </div>
 
       <div
-        className="flex-1 w-full overflow-y-auto scroll-smooth px-4 py-4 sm:px-6 sm:py-6 bg-white dark:bg-gray-950"
+        className="flex-1 w-full overflow-y-auto scroll-smooth px-4 py-4 sm:px-6 sm:py-6 bg-white"
         role="log"
         aria-live="polite"
         aria-relevant="additions"
@@ -419,7 +419,7 @@ export default function ErnestVoiceChat() {
                 rounded-2xl px-4 py-3 shadow-sm ring-1 ring-inset
                 ${m.from === 'user'
                   ? 'bg-blue-600 text-white ring-blue-500'
-                  : 'bg-gray-100 text-gray-900 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700'}`}
+                  : 'bg-gray-100 text-gray-900 ring-gray-200'}`}
               >
                 {m.text}
               </div>
@@ -427,20 +427,20 @@ export default function ErnestVoiceChat() {
           ))}
           {isThinking && (
             <li className="flex justify-start" role="status" aria-live="polite">
-              <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-4 shadow-sm ring-1 ring-inset bg-gray-100 text-gray-900 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700">
+              <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-4 shadow-sm ring-1 ring-inset bg-gray-100 text-gray-900 ring-gray-200">
                 <div className="flex items-center gap-3">
-                  <div className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-gray-900/5 text-gray-900 dark:bg-white/10 dark:text-white">
+                  <div className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-gray-900/5 text-gray-900">
                     <ThinkingIcon className="h-5 w-5" aria-hidden="true" />
-                    <span className="absolute inset-0 rounded-full border border-gray-400/60 dark:border-white/30 animate-pulse" aria-hidden="true"></span>
+                    <span className="absolute inset-0 rounded-full border border-gray-400/60 animate-pulse" aria-hidden="true"></span>
                   </div>
                   <div className="flex flex-col">
                     <span className="font-semibold">{thinkingStatus.step.label}</span>
                     <span className="text-sm opacity-80">{thinkingStatus.step.subLabel}</span>
                   </div>
                 </div>
-                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
                   <span
-                    className="block h-full rounded-full bg-gradient-to-r from-gray-600 to-gray-900 dark:from-white/50 dark:to-white transition-all duration-500"
+                    className="block h-full rounded-full bg-gradient-to-r from-gray-600 to-gray-900 transition-all duration-500"
                     style={{ width: `${thinkingStatus.progress * 100}%` }}
                     aria-hidden="true"
                   ></span>
@@ -449,7 +449,7 @@ export default function ErnestVoiceChat() {
                   {[0, 1, 2].map((dot) => (
                     <span
                       key={`voice-dot-${dot}`}
-                      className="h-2 w-2 rounded-full bg-gray-500 animate-bounce dark:bg-white/70"
+                      className="h-2 w-2 rounded-full bg-gray-500 animate-bounce"
                       style={{ animationDelay: `${dot * 0.18}s` }}
                       aria-hidden="true"
                     ></span>
@@ -462,20 +462,20 @@ export default function ErnestVoiceChat() {
         </ul>
       </div>
 
-      <div className="w-full border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-950/95">
+      <div className="w-full border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur">
         {/* Zone de fichiers joints */}
         {files.length > 0 && (
           <div className="mx-auto mb-3 flex w-full max-w-screen-lg flex-wrap gap-2">
             {files.map((f, i) => (
               <span
                 key={`${f.name}-${i}`}
-                className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-800 ring-1 ring-inset ring-gray-300 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700"
+                className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-800 ring-1 ring-inset ring-gray-300"
               >
                 {f.name}
                 <button
                   type="button"
                   onClick={() => removeFileAt(i)}
-                  className="rounded-full px-3 py-1 text-gray-500 hover:bg-gray-200 hover:text-gray-800 dark:hover:bg-gray-700 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                  className="rounded-full px-3 py-1 text-gray-500 hover:bg-gray-200 hover:text-gray-800 min-w-[32px] min-h-[32px] flex items-center justify-center"
                   aria-label={`Retirer ${f.name}`}
                   title="Retirer"
                 >
@@ -512,7 +512,7 @@ export default function ErnestVoiceChat() {
                 className={`flex-shrink-0 inline-flex items-center justify-center gap-2 rounded-full p-4 text-lg font-semibold shadow-lg transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 min-w-[60px] min-h-[60px]
                   ${recording 
                     ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-200' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                 aria-pressed={recording}
                 aria-label={recording ? 'Arrêter l\'enregistrement' : 'Commencer l\'enregistrement'}
                 title={recording ? 'Arrêter l\'enregistrement' : 'Parler'}
@@ -536,7 +536,7 @@ export default function ErnestVoiceChat() {
                     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
                   }}
                   placeholder="Écrivez votre message..."
-                  className="w-full resize-none rounded-2xl border-2 border-gray-300 bg-white p-4 pr-16 leading-7 text-gray-900 shadow-sm outline-none ring-0 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                  className="w-full resize-none rounded-2xl border-2 border-gray-300 bg-white p-4 pr-16 leading-7 text-gray-900 shadow-sm outline-none ring-0 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
                   style={{ minHeight: '56px', maxHeight: '120px' }}
                 />
                 
@@ -545,7 +545,7 @@ export default function ErnestVoiceChat() {
                   <button
                     type="button"
                     onClick={handleFileButtonClick}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full p-2.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 dark:hover:bg-gray-700 dark:hover:text-gray-300 min-w-[40px] min-h-[40px]"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full p-2.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 min-w-[40px] min-h-[40px]"
                     aria-label="Joindre des fichiers"
                     title="Joindre des fichiers"
                   >
