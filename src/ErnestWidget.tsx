@@ -8,6 +8,7 @@ import type { ErnestWidgetProps, Intent, SubIntent, SendActionArgs, ChatMessage,
 import { ariaButtonProps, onActivate, focusFirstInteractive } from "./utils/accessibility";
 import ReactMarkdown from 'react-markdown';
 import { splitSecondMessage, SECOND_MESSAGE_INTERVAL_MS } from "./utils/secondMessage";
+import ErnestChatAvatar from "./assets/Ernest-chat2.png";
 
 // Composant VoiceModeOverlay - Mode voix amélioré avec visualisation et transcription
 type VoiceModeOverlayProps = {
@@ -779,31 +780,12 @@ function UserAvatar({
 // Composant Avatar pour le chatbot (Ernest)
 function BotAvatar() {
   return (
-    <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#3B82F6] flex items-center justify-center shadow-md ring-2 ring-white relative">
-      <svg 
-        className="w-5 h-5 md:w-6 md:h-6" 
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-label="Ernest"
-      >
-        {/* Grande étoile centrale (4 pointes) */}
-        <path 
-          d="M12 3L13.5 9.5L20 11L13.5 12.5L12 19L10.5 12.5L4 11L10.5 9.5L12 3Z" 
-          fill="white" 
-        />
-        {/* Petite étoile en haut à droite */}
-        <path 
-          d="M17 5L17.3 6.5L18.5 7L17.3 7.5L17 9L16.7 7.5L15.5 7L16.7 6.5L17 5Z" 
-          fill="white" 
-          opacity="0.6"
-        />
-        {/* Petite étoile en bas à gauche */}
-        <path 
-          d="M7 17L7.3 18.5L8.5 19L7.3 19.5L7 21L6.7 19.5L5.5 19L6.7 18.5L7 17Z" 
-          fill="white" 
-          opacity="0.6"
-        />
-      </svg>
+    <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center shadow-md ring-2 ring-white overflow-hidden relative">
+      <img
+        src={ErnestChatAvatar}
+        alt="Ernest"
+        className="w-full h-full object-cover"
+      />
     </div>
   );
 }
