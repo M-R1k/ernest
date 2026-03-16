@@ -11,8 +11,7 @@ export default function App() {
       </a>
 
       <main id="contenu" className="flex h-full w-full flex-col">
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-lg">
-          
+        <div className="rounded-2xl bg-white shadow-lg">
           <ErnestWidget webhookUrl="https://clic-et-moi.app.n8n.cloud/webhook/soscyber2" />
         </div>
       </main>

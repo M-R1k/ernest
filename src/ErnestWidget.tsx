@@ -957,14 +957,14 @@ function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choic
 
 function TopBar({ onBack, onRestart }: { onBack: () => void; onRestart: () => void }) {
   return (
-    <header className="relative z-10 flex h-[100px] items-center justify-between bg-[#3B82F6] px-3 md:px-6">
+    <header className="relative z-10 flex h-[60px] items-center justify-between bg-[#3B82F6] px-3 md:px-6">
       <button
         type="button"
         onClick={onBack}
-        className="relative z-20 grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-white text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+        className="relative z-20 grid h-9 w-9 place-items-center rounded-full bg-white text-gray-700 shadow-sm focus:outline-none"
         aria-label="Retour"
       >
-        <ArrowLeft aria-hidden className="h-4 w-4 md:h-5 md:w-5" />
+        <ArrowLeft aria-hidden className="h-4 w-4" />
       </button>
       <div className="absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 text-center">
         <span className="text-[18px] font-semibold text-white">Vérificateur de messages</span>
@@ -972,10 +972,10 @@ function TopBar({ onBack, onRestart }: { onBack: () => void; onRestart: () => vo
       <button
         type="button"
         onClick={onRestart}
-        className="relative z-20 grid h-9 w-9 md:h-12 md:w-12 place-items-center rounded-full bg-white text-gray-700 shadow-sm focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+        className="relative z-20 grid h-9 w-9 place-items-center rounded-full bg-white text-gray-700 shadow-sm focus:outline-none"
         aria-label="Recommencer la conversation"
       >
-        <svg className="h-4 w-4 md:h-5 md:w-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+        <svg className="h-4 w-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
           <path d="M1 4v6h6" />
           <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
         </svg>
