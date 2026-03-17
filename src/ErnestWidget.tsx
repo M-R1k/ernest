@@ -1174,8 +1174,8 @@ function Composer({
           onKeyDown={(e) => {
             if (e.key === "Enter" && value.trim()) onSend();
           }}
-          placeholder="Posez votre question"
-          aria-label="Posez votre question"
+          placeholder="Collez votre SMS douteux ici"
+          aria-label="Collez votre SMS douteux ici"
           className="flex-1 bg-transparent text-[15px] md:text-[18px] outline-none placeholder:text-gray-500"
         />
         <button
