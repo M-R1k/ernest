@@ -9,6 +9,8 @@ import { ariaButtonProps, onActivate, focusFirstInteractive } from "./utils/acce
 import ReactMarkdown from 'react-markdown';
 import { splitSecondMessage, SECOND_MESSAGE_INTERVAL_MS } from "./utils/secondMessage";
 import ErnestChatAvatar from "./assets/Ernest-chat2.png";
+// @ts-expect-error tenant config is plain JS (no .ts yet)
+import { resolveTenantId } from "./config/tenant";
 
 // Composant VoiceModeOverlay - Mode voix amélioré avec visualisation et transcription
 type VoiceModeOverlayProps = {
@@ -393,7 +395,7 @@ function VoiceModeOverlay({
                   <button
                     type="button"
                     onClick={onSendTranscription}
-                    className="w-full rounded-xl bg-blue-600 px-6 py-3 md:py-4 text-white text-[16px] md:text-[18px] font-semibold shadow-md hover:bg-blue-700 transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+                    className="klesia-voice-send-transcription w-full rounded-xl bg-blue-600 px-6 py-3 md:py-4 text-white text-[16px] md:text-[18px] font-semibold shadow-md hover:bg-blue-700 transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
                     aria-label="Envoyer la transcription"
                   >
                     Envoyer
@@ -955,27 +957,82 @@ function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choic
   );
 }
 
-function TopBar({ onBack, onRestart }: { onBack: () => void; onRestart: () => void }) {
+type TopBarProps = {
+  onBack: () => void;
+  onRestart: () => void;
+  isKlesiaTenant: boolean;
+  isMHTenant: boolean;
+  isIrcemTenant: boolean;
+  isEspritRetraiteTenant: boolean;
+};
+
+function TopBar({
+  onBack,
+  onRestart,
+  isKlesiaTenant,
+  isMHTenant,
+  isIrcemTenant,
+  isEspritRetraiteTenant,
+}: TopBarProps) {
+  const headerClassName = isKlesiaTenant
+    ? "klesia-chat-sticky-header bg-[#B8E1F1] text-[#213067] border-b"
+    : isMHTenant
+      ? "bg-[#E2250C] text-white border-[#E2250C] border-b"
+      : isIrcemTenant
+        ? "ircem-chat-sticky-header text-white border-b"
+        : isEspritRetraiteTenant
+          ? "esprit-retraite-chat-sticky-header text-white border-b"
+          : "bg-[#3B82F6] text-white border-[#3B82F6] border-b";
+
+  const iconButtonClassName = isKlesiaTenant
+    ? "bg-[#F8FAFC] text-[#213067] hover:bg-white focus-visible:ring-[#213067]"
+    : isMHTenant
+      ? "bg-white text-[#E2250C] hover:bg-[#FFF2F0] focus-visible:ring-[#E2250C]"
+      : isIrcemTenant
+        ? "ircem-header-icon-button bg-white text-[#D51130] hover:bg-rose-50 focus-visible:ring-[#D51130]"
+        : isEspritRetraiteTenant
+          ? "esprit-retraite-header-icon-button bg-white text-[#00afcb] hover:bg-cyan-50 focus-visible:ring-[#00afcb]"
+          : "bg-white text-[#3B82F6] hover:bg-blue-50 focus-visible:ring-[#3B82F6]";
+
+  const titleClassName = isKlesiaTenant
+    ? "text-[#213067]"
+    : isMHTenant || isIrcemTenant || isEspritRetraiteTenant
+      ? "text-[#F8FAFC]"
+      : "text-white";
+
   return (
-    <header className="relative z-10 flex h-[60px] items-center justify-between bg-[#3B82F6] px-3 md:px-6">
+    <header
+      className={`relative z-10 flex h-[60px] md:h-[48px] items-center justify-between px-3 md:px-6 ${headerClassName}`}
+    >
       <button
         type="button"
         onClick={onBack}
-        className="relative z-20 grid h-9 w-9 place-items-center rounded-full bg-white text-gray-700 shadow-sm focus:outline-none"
+        className={`relative z-20 grid h-9 w-9 place-items-center rounded-full shadow-sm transition focus:outline-none focus-visible:ring-2 ${iconButtonClassName}`}
         aria-label="Retour"
       >
-        <ArrowLeft aria-hidden className="h-4 w-4" />
+        <ArrowLeft aria-hidden className="h-4 w-4 md:h-5 md:w-5" />
       </button>
       <div className="absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 text-center">
-        <span className="text-[18px] font-semibold text-white">Vérificateur de messages</span>
+        <span className={`text-[18px] font-semibold md:text-[16px] ${titleClassName}`}>
+          Vérificateur de messages
+        </span>
       </div>
       <button
         type="button"
         onClick={onRestart}
-        className="relative z-20 grid h-9 w-9 place-items-center rounded-full bg-white text-gray-700 shadow-sm focus:outline-none"
+        className={`relative z-20 grid h-9 w-9 place-items-center rounded-full shadow-sm transition focus:outline-none focus-visible:ring-2 ${iconButtonClassName}`}
         aria-label="Recommencer la conversation"
       >
-        <svg className="h-4 w-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden>
+        <svg
+          className="h-4 w-4 md:h-5 md:w-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          viewBox="0 0 24 24"
+          aria-hidden
+        >
           <path d="M1 4v6h6" />
           <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
         </svg>
@@ -1182,7 +1239,7 @@ function Composer({
           type="button"
           onClick={onSend}
           disabled={!value.trim() && attachedFiles.length === 0}
-          className="grid h-10 w-10 md:h-14 md:w-14 flex-shrink-0 place-items-center rounded-full bg-[#3B82F6] text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="klesia-send-button grid h-10 w-10 md:h-14 md:w-14 flex-shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           aria-label="Envoyer"
         >
           <svg className="h-6 w-6 md:h-9 md:w-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -1196,6 +1253,12 @@ function Composer({
 }
 
 export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" }: ErnestWidgetProps) {
+  const activeTenant = useMemo(() => resolveTenantId(), []);
+  const isKlesiaTenant = activeTenant === "klesia";
+  const isMHTenant = activeTenant === "mh";
+  const isIrcemTenant = activeTenant === "ircem";
+  const isEspritRetraiteTenant = activeTenant === "esprit-retraite";
+
   const { sessionId, messages, progress, sendAction, loading, error, clearError, addProgress, reset, appendAssistant, appendUser } = useErnest(webhookUrl);
   const thinkingStatus = useThinkingSteps(loading);
   const ThinkingIcon = thinkingStatus.step.icon;
@@ -2320,7 +2383,14 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
 
   return (
     <section ref={containerRef} className="flex h-screen w-full flex-col bg-white text-[16px] md:text-[19px] overflow-hidden">
-      <TopBar onBack={handleBack} onRestart={handleRestartConversation} />
+      <TopBar
+        onBack={handleBack}
+        onRestart={handleRestartConversation}
+        isKlesiaTenant={isKlesiaTenant}
+        isMHTenant={isMHTenant}
+        isIrcemTenant={isIrcemTenant}
+        isEspritRetraiteTenant={isEspritRetraiteTenant}
+      />
 
       {/* Home screen top section supprimée pour placer les boutons en bas */}
       {false && screen === "home" && <div />}

@@ -125,3 +125,188 @@ html, body {
   animation-duration: 12s;
   animation-delay: 600ms;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Tenant theming (white-label)                                               */
+/* -------------------------------------------------------------------------- */
+.tenant-demo {
+  --demo-blue-primary: #3b82f6;
+  --demo-blue-hover: #2563eb;
+}
+
+.tenant-demo .bg-blue-600 { background-color: var(--demo-blue-primary) !important; }
+.tenant-demo .hover\:bg-blue-700:hover { background-color: var(--demo-blue-hover) !important; }
+.tenant-demo .text-blue-600 { color: var(--demo-blue-primary) !important; }
+.tenant-demo .border-blue-500 { border-color: var(--demo-blue-primary) !important; }
+.tenant-demo .ring-blue-500 { --tw-ring-color: var(--demo-blue-primary) !important; }
+
+.tenant-klesia {
+  --klesia-blue-primary: #213067;
+  --klesia-blue-secondary: #798ac8;
+  --klesia-blue-700: #1a2551;
+  --klesia-blue-500: #4f62a8;
+  --klesia-blue-300: #a8b4df;
+  --klesia-blue-100: #e9edfb;
+  --klesia-orange: #d57a36;
+  --klesia-orange-700: #b86428;
+  --klesia-orange-100: #fdf0e6;
+  --klesia-text-on-primary: #ffffff;
+}
+
+.tenant-klesia .bg-blue-700 { background-color: var(--klesia-blue-700) !important; }
+.tenant-klesia .bg-blue-600 { background-color: var(--klesia-blue-primary) !important; }
+.tenant-klesia .bg-blue-500 { background-color: var(--klesia-blue-500) !important; }
+.tenant-klesia .bg-blue-400 { background-color: var(--klesia-blue-secondary) !important; }
+.tenant-klesia .bg-blue-300 { background-color: var(--klesia-blue-300) !important; }
+.tenant-klesia .bg-blue-200 { background-color: color-mix(in srgb, var(--klesia-blue-secondary) 35%, white) !important; }
+.tenant-klesia .bg-blue-100 { background-color: color-mix(in srgb, var(--klesia-blue-secondary) 22%, white) !important; }
+.tenant-klesia .bg-blue-50 { background-color: var(--klesia-blue-100) !important; }
+
+.tenant-klesia .text-blue-900 { color: var(--klesia-blue-primary) !important; }
+.tenant-klesia .text-blue-800 { color: color-mix(in srgb, var(--klesia-blue-primary) 85%, black) !important; }
+.tenant-klesia .text-blue-700 { color: color-mix(in srgb, var(--klesia-blue-primary) 78%, black) !important; }
+.tenant-klesia .text-blue-600 { color: var(--klesia-blue-secondary) !important; }
+.tenant-klesia .text-blue-500 { color: var(--klesia-blue-500) !important; }
+.tenant-klesia .text-blue-400 { color: var(--klesia-blue-secondary) !important; }
+
+.tenant-klesia .border-blue-500 { border-color: var(--klesia-blue-500) !important; }
+.tenant-klesia .border-blue-300 { border-color: color-mix(in srgb, var(--klesia-blue-secondary) 50%, white) !important; }
+.tenant-klesia .border-blue-200 { border-color: color-mix(in srgb, var(--klesia-blue-secondary) 35%, white) !important; }
+.tenant-klesia .border-blue-100 { border-color: color-mix(in srgb, var(--klesia-blue-secondary) 25%, white) !important; }
+
+.tenant-klesia .ring-blue-500 { --tw-ring-color: var(--klesia-blue-primary) !important; }
+.tenant-klesia .ring-blue-400 { --tw-ring-color: var(--klesia-blue-500) !important; }
+.tenant-klesia .ring-blue-300 { --tw-ring-color: var(--klesia-blue-300) !important; }
+
+.tenant-klesia .from-blue-500 { --tw-gradient-from: var(--klesia-blue-500) var(--tw-gradient-from-position) !important; }
+.tenant-klesia .to-blue-600 { --tw-gradient-to: var(--klesia-blue-primary) var(--tw-gradient-to-position) !important; }
+
+.tenant-klesia .bg-blue-700,
+.tenant-klesia .bg-blue-600,
+.tenant-klesia .bg-blue-500 {
+  color: var(--klesia-text-on-primary);
+}
+
+.tenant-klesia .text-\[\#D57A36\] { color: var(--klesia-orange) !important; }
+
+.tenant-klesia .klesia-chat-sticky-header {
+  border-bottom-color: color-mix(in srgb, var(--klesia-blue-secondary) 22%, #b8e1f1) !important;
+}
+
+.tenant-klesia .klesia-send-button {
+  background-color: var(--klesia-blue-primary) !important;
+}
+.tenant-klesia .klesia-send-button:hover {
+  background-color: var(--klesia-blue-700) !important;
+}
+.tenant-klesia .klesia-send-button:focus-visible {
+  --tw-ring-color: var(--klesia-orange) !important;
+}
+
+.tenant-klesia .klesia-voice-send-transcription {
+  background-color: var(--klesia-orange) !important;
+  color: #ffffff !important;
+}
+.tenant-klesia .klesia-voice-send-transcription:hover {
+  background-color: var(--klesia-orange-700) !important;
+}
+
+.tenant-mh {
+  --mh-red-primary: #e2250c;
+  --mh-red-700: #b71e0a;
+  --mh-red-300: #ffb0a4;
+}
+
+.tenant-mh .bg-blue-600 { background-color: var(--mh-red-primary) !important; }
+.tenant-mh .hover\:bg-blue-700:hover { background-color: var(--mh-red-700) !important; }
+.tenant-mh .text-blue-600 { color: var(--mh-red-primary) !important; }
+.tenant-mh .border-blue-500 { border-color: var(--mh-red-primary) !important; }
+.tenant-mh .ring-blue-500 { --tw-ring-color: var(--mh-red-primary) !important; }
+
+.tenant-mh .klesia-send-button {
+  background-color: var(--mh-red-primary) !important;
+}
+.tenant-mh .klesia-send-button:hover {
+  background-color: var(--mh-red-700) !important;
+}
+.tenant-mh .klesia-send-button:focus-visible {
+  --tw-ring-color: var(--mh-red-300) !important;
+}
+
+.tenant-ircem {
+  --ircem-magenta: #e6007a;
+  --ircem-red-primary: #d51130;
+  --ircem-red-hover: #b30e28;
+  --ircem-red-300: #ffb3c4;
+  --ircem-header-gradient: linear-gradient(45deg, #e6007a 0%, #d51130 45%, #d51130 100%);
+  --ircem-text-on-primary: #ffffff;
+}
+
+.tenant-ircem .bg-blue-600 { background-color: var(--ircem-red-primary) !important; }
+.tenant-ircem .hover\:bg-blue-700:hover { background-color: var(--ircem-red-hover) !important; }
+.tenant-ircem .text-blue-600 { color: var(--ircem-red-primary) !important; }
+.tenant-ircem .border-blue-500 { border-color: var(--ircem-red-primary) !important; }
+.tenant-ircem .ring-blue-500 { --tw-ring-color: var(--ircem-red-primary) !important; }
+
+.tenant-ircem .ircem-chat-sticky-header {
+  background: var(--ircem-header-gradient) !important;
+  border-bottom-color: var(--ircem-red-primary) !important;
+}
+
+.tenant-ircem .ircem-chat-sticky-header .ircem-header-icon-button {
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.tenant-ircem .ircem-chat-sticky-header .ircem-header-icon-button:focus-visible {
+  --tw-ring-color: var(--ircem-red-primary) !important;
+  --tw-ring-offset-width: 2px;
+  --tw-ring-offset-color: #ffffff;
+}
+
+.tenant-ircem .klesia-send-button {
+  background: var(--ircem-header-gradient) !important;
+}
+.tenant-ircem .klesia-send-button:hover {
+  background-color: var(--ircem-red-hover) !important;
+}
+.tenant-ircem .klesia-send-button:focus-visible {
+  --tw-ring-color: var(--ircem-red-300) !important;
+}
+
+.tenant-esprit-retraite {
+  --esprit-retraite-primary: #00afcb;
+  --esprit-retraite-hover: #009ab3;
+  --esprit-retraite-300: #7ee8f5;
+  --esprit-retraite-text-on-primary: #ffffff;
+}
+
+.tenant-esprit-retraite .bg-blue-600 { background-color: var(--esprit-retraite-primary) !important; }
+.tenant-esprit-retraite .hover\:bg-blue-700:hover { background-color: var(--esprit-retraite-hover) !important; }
+.tenant-esprit-retraite .text-blue-600 { color: var(--esprit-retraite-primary) !important; }
+.tenant-esprit-retraite .border-blue-500 { border-color: var(--esprit-retraite-primary) !important; }
+.tenant-esprit-retraite .ring-blue-500 { --tw-ring-color: var(--esprit-retraite-primary) !important; }
+
+.tenant-esprit-retraite .esprit-retraite-chat-sticky-header {
+  background-color: var(--esprit-retraite-primary) !important;
+  border-bottom-color: var(--esprit-retraite-primary) !important;
+}
+
+.tenant-esprit-retraite .esprit-retraite-chat-sticky-header .esprit-retraite-header-icon-button {
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.tenant-esprit-retraite .esprit-retraite-chat-sticky-header .esprit-retraite-header-icon-button:focus-visible {
+  --tw-ring-color: var(--esprit-retraite-primary) !important;
+  --tw-ring-offset-width: 2px;
+  --tw-ring-offset-color: #ffffff;
+}
+
+.tenant-esprit-retraite .klesia-send-button {
+  background-color: var(--esprit-retraite-primary) !important;
+}
+.tenant-esprit-retraite .klesia-send-button:hover {
+  background-color: var(--esprit-retraite-hover) !important;
+}
+.tenant-esprit-retraite .klesia-send-button:focus-visible {
+  --tw-ring-color: var(--esprit-retraite-300) !important;
+}
