@@ -263,7 +263,7 @@ function VoiceModeOverlay({
             <button
               type="button"
               onClick={onClose}
-              className="grid h-9 w-9 md:h-10 md:w-10 place-items-center rounded-none bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+              className="grid h-9 w-9 md:h-10 md:w-10 place-items-center rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
               aria-label="Fermer le mode voix"
             >
               <span className="text-lg md:text-xl">✕</span>
@@ -285,7 +285,7 @@ function VoiceModeOverlay({
             {/* Message d'aide pour erreur iframe */}
             {voiceStatus.includes("Iframe non autorisée") && (
               <motion.div
-                className="w-full max-w-md mb-4 p-4 bg-amber-50 border border-amber-200 rounded-none"
+                className="w-full max-w-md mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -294,7 +294,7 @@ function VoiceModeOverlay({
                   <p className="font-semibold mb-2">🔧 Configuration requise dans WeWeb :</p>
                   <ol className="list-decimal list-inside space-y-1 text-[13px] md:text-[14px]">
                     <li>Sélectionnez votre composant iframe</li>
-                    <li>Ajoutez l'attribut : <code className="bg-amber-100 px-1 rounded-none">allow="microphone"</code></li>
+                    <li>Ajoutez l'attribut : <code className="bg-amber-100 px-1 rounded">allow="microphone"</code></li>
                     <li>Rechargez la page</li>
                   </ol>
                 </div>
@@ -319,7 +319,7 @@ function VoiceModeOverlay({
                   return (
                     <motion.div
                       key={index}
-                      className={`w-2 md:w-2.5 rounded-none ${bgColor}`}
+                      className={`w-2 md:w-2.5 rounded-full ${bgColor}`}
                       style={{
                         height: `${heightPercent}%`,
                         opacity: opacity,
@@ -348,7 +348,7 @@ function VoiceModeOverlay({
               animate="visible"
               key={displayedText}
             >
-              <div className="rounded-none bg-gray-50 px-4 md:px-5 py-3 md:py-4 min-h-[60px] md:min-h-[80px] flex items-center justify-center border border-gray-200">
+              <div className="rounded-xl bg-gray-50 px-4 md:px-5 py-3 md:py-4 min-h-[60px] md:min-h-[80px] flex items-center justify-center border border-gray-200">
                 {finalTranscription ? (
                   <motion.p
                     className="text-[16px] md:text-[18px] text-gray-900 text-center leading-relaxed"
@@ -395,7 +395,7 @@ function VoiceModeOverlay({
                   <button
                     type="button"
                     onClick={onSendTranscription}
-                    className="klesia-voice-send-transcription w-full rounded-none bg-blue-600 px-6 py-3 md:py-4 text-white text-[16px] md:text-[18px] font-semibold shadow-md hover:bg-blue-700 transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+                    className="klesia-voice-send-transcription w-full rounded-xl bg-blue-600 px-6 py-3 md:py-4 text-white text-[16px] md:text-[18px] font-semibold shadow-md hover:bg-blue-700 transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
                     aria-label="Envoyer la transcription"
                   >
                     Envoyer
@@ -410,7 +410,7 @@ function VoiceModeOverlay({
               <motion.button
                 type="button"
                 onClick={onClose}
-                className="grid h-14 w-14 md:h-16 md:w-16 place-items-center rounded-none bg-red-100 text-red-600 hover:bg-red-200 transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-red-300 shadow-md"
+                className="grid h-14 w-14 md:h-16 md:w-16 place-items-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-red-300 shadow-md"
                 aria-label="Annuler"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -425,7 +425,7 @@ function VoiceModeOverlay({
                   {recording && (
                     <>
                       <motion.div
-                        className="absolute inset-0 rounded-none"
+                        className="absolute inset-0 rounded-full"
                         style={{
                           background: getHaloColor(),
                           filter: "blur(12px)",
@@ -444,7 +444,7 @@ function VoiceModeOverlay({
                         }}
                       />
                       <motion.div
-                        className="absolute inset-0 rounded-none"
+                        className="absolute inset-0 rounded-full"
                         style={{
                           background: getHaloColor(),
                           filter: "blur(8px)",
@@ -470,7 +470,7 @@ function VoiceModeOverlay({
                 <motion.button
                   type="button"
                   onClick={recording ? onStopRecording : onStartRecording}
-                  className={`relative grid h-20 w-20 md:h-24 md:w-24 place-items-center rounded-none text-white shadow-lg transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 ${
+                  className={`relative grid h-20 w-20 md:h-24 md:w-24 place-items-center rounded-full text-white shadow-lg transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 ${
                     recording
                       ? 'bg-red-600 hover:bg-red-700'
                       : 'bg-blue-600 hover:bg-blue-700'
@@ -506,7 +506,7 @@ function VoiceModeOverlay({
               <motion.button
                 type="button"
                 onClick={onClose}
-                className="grid h-14 w-14 md:h-16 md:w-16 place-items-center rounded-none bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-300 shadow-md"
+                className="grid h-14 w-14 md:h-16 md:w-16 place-items-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-[120ms] ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-300 shadow-md"
                 aria-label="Retour au clavier"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -728,7 +728,7 @@ function LargeButton({ icon, label, onClick, ariaLabel }: { icon: string; label:
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center justify-center gap-3 rounded-none border-2 border-gray-300 bg-white p-5 text-center text-[18px] md:text-[20px] font-semibold shadow-sm transition hover:border-blue-500 hover:shadow focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 min-h-[88px] md:min-h-[100px]"
+      className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-300 bg-white p-5 text-center text-[18px] md:text-[20px] font-semibold shadow-sm transition hover:border-blue-500 hover:shadow focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 min-h-[88px] md:min-h-[100px]"
       aria-label={ariaLabel}
     >
       <span className="text-3xl md:text-4xl" aria-hidden>
@@ -757,7 +757,7 @@ function UserAvatar({
   const initial = name.charAt(0).toUpperCase();
   
   return (
-    <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-none overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm md:text-base shadow-md ring-2 ring-white">
+    <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm md:text-base shadow-md ring-2 ring-white">
       {profileImage ? (
         <img 
           src={profileImage} 
@@ -782,7 +782,7 @@ function UserAvatar({
 // Composant Avatar pour le chatbot (Ernest)
 function BotAvatar() {
   return (
-    <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-none flex items-center justify-center shadow-md ring-2 ring-white overflow-hidden relative">
+    <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center shadow-md ring-2 ring-white overflow-hidden relative">
       <img
         src={ErnestChatAvatar}
         alt="Ernest"
@@ -811,7 +811,7 @@ function Bubble({
 
   const bubbleContent = (
     <div
-      className={`max-w-[85%] md:max-w-[75%] whitespace-pre-wrap rounded-none px-3 md:px-5 py-2 md:py-4 ${
+      className={`max-w-[85%] md:max-w-[75%] whitespace-pre-wrap rounded-2xl px-3 md:px-5 py-2 md:py-4 ${
         isUser
           ? "bg-white text-gray-900 shadow-lg"
           : "bg-gray-100 text-gray-900 ring-1 ring-inset ring-gray-200"
@@ -832,7 +832,7 @@ function Bubble({
                   return (
                     <div
                       key={index}
-                      className={`relative rounded-none overflow-hidden ${
+                      className={`relative rounded-lg overflow-hidden ${
                         isImage 
                           ? "shadow-md" 
                           : "border border-gray-200 bg-gray-50"
@@ -939,7 +939,7 @@ function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choic
           key={c.value}
           type="button"
           onClick={() => onSelect(c.value)}
-          className="inline-flex min-h-[48px] md:min-h-[52px] items-center justify-center rounded-none bg-white px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-medium ring-1 ring-inset ring-gray-300 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+          className="inline-flex min-h-[48px] md:min-h-[52px] items-center justify-center rounded-xl bg-white px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-medium ring-1 ring-inset ring-gray-300 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
           aria-label={c.label}
         >
           {c.label}
@@ -948,7 +948,7 @@ function ChoiceGroup({ step, choices, onSelect }: { step: number; choices: Choic
       <button
         type="button"
         onClick={() => onSelect("fallback")}
-        className="inline-flex min-h-[48px] md:min-h-[52px] items-center justify-center rounded-none bg-white px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-medium ring-1 ring-inset ring-gray-300 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
+        className="inline-flex min-h-[48px] md:min-h-[52px] items-center justify-center rounded-xl bg-white px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-medium ring-1 ring-inset ring-gray-300 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300"
         aria-label="Je n'y arrive pas"
       >
         Je n'y arrive pas
@@ -1007,7 +1007,7 @@ function TopBar({
       <button
         type="button"
         onClick={onBack}
-        className={`relative z-20 grid h-9 w-9 place-items-center rounded-none shadow-sm transition focus:outline-none focus-visible:ring-2 ${iconButtonClassName}`}
+        className={`relative z-20 grid h-9 w-9 place-items-center rounded-full shadow-sm transition focus:outline-none focus-visible:ring-2 ${iconButtonClassName}`}
         aria-label="Retour"
       >
         <ArrowLeft aria-hidden className="h-4 w-4 md:h-5 md:w-5" />
@@ -1020,7 +1020,7 @@ function TopBar({
       <button
         type="button"
         onClick={onRestart}
-        className={`relative z-20 grid h-9 w-9 place-items-center rounded-none shadow-sm transition focus:outline-none focus-visible:ring-2 ${iconButtonClassName}`}
+        className={`relative z-20 grid h-9 w-9 place-items-center rounded-full shadow-sm transition focus:outline-none focus-visible:ring-2 ${iconButtonClassName}`}
         aria-label="Recommencer la conversation"
       >
         <svg
@@ -1046,18 +1046,18 @@ function StickyBar({ onBack, onHome, onContact, onReminder }: { onBack: () => vo
     <div className="sticky bottom-0 z-10 w-full border-t border-gray-200 bg-white/95 px-4 md:px-6 py-3 md:py-4 backdrop-blur">
       <div className="mx-auto flex max-w-screen-lg items-center justify-between gap-2 md:gap-3">
         <div className="flex items-center gap-2 md:gap-3">
-          <button type="button" onClick={onBack} className="min-h-[48px] md:min-h-[52px] rounded-none bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300">
+          <button type="button" onClick={onBack} className="min-h-[48px] md:min-h-[52px] rounded-xl bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300">
             ↩️ Retour
           </button>
-          <button type="button" onClick={onHome} className="min-h-[48px] md:min-h-[52px] rounded-none bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300">
+          <button type="button" onClick={onHome} className="min-h-[48px] md:min-h-[52px] rounded-xl bg-gray-100 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold shadow-sm transition hover:bg-gray-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300">
             🏠 Menu
           </button>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
-          <a href="tel:3018" onClick={onContact} className="min-h-[48px] md:min-h-[52px] rounded-none bg-green-600 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-300">
+          <a href="tel:3018" onClick={onContact} className="min-h-[48px] md:min-h-[52px] rounded-xl bg-green-600 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-green-300">
             📞 Contact
           </a>
-          <button type="button" onClick={onReminder} className="min-h-[48px] md:min-h-[52px] rounded-none bg-amber-100 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold shadow-sm transition hover:bg-amber-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300">
+          <button type="button" onClick={onReminder} className="min-h-[48px] md:min-h-[52px] rounded-xl bg-amber-100 px-4 md:px-5 py-3 md:py-3.5 text-[18px] md:text-[19px] font-semibold shadow-sm transition hover:bg-amber-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300">
             🔔 Rappel
           </button>
         </div>
@@ -1148,7 +1148,7 @@ function AttachedFileItem({ file, index, onRemove }: { file: File; index: number
   }, [file, isImage]);
 
   return (
-    <div className="group relative inline-flex flex-col rounded-none bg-blue-50 border border-blue-200 shadow-sm overflow-hidden hover:shadow-md transition">
+    <div className="group relative inline-flex flex-col rounded-lg bg-blue-50 border border-blue-200 shadow-sm overflow-hidden hover:shadow-md transition">
       {/* Prévisualisation pour les images */}
       {isImage && previewUrl ? (
         <div className="relative w-32 h-32 md:w-40 md:h-40 bg-gray-100">
@@ -1160,7 +1160,7 @@ function AttachedFileItem({ file, index, onRemove }: { file: File; index: number
           <button
             type="button"
             onClick={() => onRemove(index)}
-            className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-none bg-red-500 text-white hover:bg-red-600 transition shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 z-10"
+            className="absolute top-1 right-1 grid h-6 w-6 place-items-center rounded-full bg-red-500 text-white hover:bg-red-600 transition shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 z-10"
             aria-label={`Retirer ${file.name}`}
           >
             <span className="text-sm font-bold">×</span>
@@ -1185,7 +1185,7 @@ function AttachedFileItem({ file, index, onRemove }: { file: File; index: number
           <button
             type="button"
             onClick={() => onRemove(index)}
-            className="flex-shrink-0 ml-1 grid h-6 w-6 place-items-center rounded-none bg-blue-200 text-blue-700 hover:bg-blue-300 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+            className="flex-shrink-0 ml-1 grid h-6 w-6 place-items-center rounded-full bg-blue-200 text-blue-700 hover:bg-blue-300 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             aria-label={`Retirer ${file.name}`}
           >
             <span className="text-sm font-bold">×</span>
@@ -1223,7 +1223,7 @@ function Composer({
       )}
 
       {/* Zone de saisie et boutons */}
-      <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md items-center gap-2.5 md:gap-4 rounded-none bg-gray-100 px-3 md:px-5 py-2 md:py-3.5 text-gray-700">
+      <div className="mx-auto flex w-full max-w-screen-sm md:max-w-screen-md items-center gap-2.5 md:gap-4 rounded-full bg-gray-100 px-3 md:px-5 py-2 md:py-3.5 text-gray-700">
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -1239,7 +1239,7 @@ function Composer({
           type="button"
           onClick={onSend}
           disabled={!value.trim() && attachedFiles.length === 0}
-          className="klesia-send-button grid h-10 w-10 md:h-14 md:w-14 flex-shrink-0 place-items-center rounded-none bg-blue-600 text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="klesia-send-button grid h-10 w-10 md:h-14 md:w-14 flex-shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           aria-label="Envoyer"
         >
           <svg className="h-6 w-6 md:h-9 md:w-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -2402,13 +2402,13 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
       <div className="flex flex-1 flex-col gap-3 md:gap-5 px-3 md:px-6 py-4 md:py-3 overflow-y-auto min-h-0 pb-8 md:pb-4">
           {/* Safety banner */}
           {showBannerUrl && (
-            <div className="mx-auto w-full max-w-screen-sm md:max-w-screen-md rounded-none bg-amber-50 p-4 md:p-5 text-amber-900 ring-1 ring-inset ring-amber-200">
+            <div className="mx-auto w-full max-w-screen-sm md:max-w-screen-md rounded-xl bg-amber-50 p-4 md:p-5 text-amber-900 ring-1 ring-inset ring-amber-200">
               <div className="mb-2 md:mb-3 font-semibold text-[16px] md:text-[18px]">Pour votre sécurité, utilisez les canaux officiels.</div>
               <a
                 href={showBannerUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-[44px] md:min-h-[48px] items-center justify-center rounded-none bg-amber-600 px-4 md:px-5 py-2 md:py-2.5 text-[16px] md:text-[18px] text-white hover:bg-amber-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
+                className="inline-flex min-h-[44px] md:min-h-[48px] items-center justify-center rounded-lg bg-amber-600 px-4 md:px-5 py-2 md:py-2.5 text-[16px] md:text-[18px] text-white hover:bg-amber-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
               >
                 Ouvrir le site officiel
               </a>
@@ -2455,11 +2455,11 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
               );
             })}
             {loading && (
-              <div className="mr-auto w-full max-w-screen-sm rounded-none bg-gray-50 px-4 py-3 text-gray-900 shadow-sm ring-1 ring-gray-200 md:max-w-screen-md md:px-5">
+              <div className="mr-auto w-full max-w-screen-sm rounded-2xl bg-gray-50 px-4 py-3 text-gray-900 shadow-sm ring-1 ring-gray-200 md:max-w-screen-md md:px-5">
                 <div className="flex items-center gap-4">
-                  <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-none bg-gradient-to-br from-blue-600/15 to-indigo-600/20 text-blue-600">
+                  <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600/15 to-indigo-600/20 text-blue-600">
                     <ThinkingIcon className="h-5 w-5 md:h-6 md:w-6" aria-hidden="true" />
-                    <span className="absolute inset-0 rounded-none border border-blue-300/60 animate-ping" aria-hidden="true"></span>
+                    <span className="absolute inset-0 rounded-full border border-blue-300/60 animate-ping" aria-hidden="true"></span>
                   </div>
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between">
@@ -2467,9 +2467,9 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
                       <span className="text-sm font-medium text-gray-500">{thinkingPercent}%</span>
                     </div>
                     <p className="text-sm text-gray-500">{thinkingStatus.step.subLabel}</p>
-                    <div className="h-1.5 w-full overflow-hidden rounded-none bg-gray-200">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
                       <span
-                        className="block h-full rounded-none bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
+                        className="block h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
                         style={{ width: `${thinkingStatus.progress * 100}%` }}
                         aria-hidden="true"
                       ></span>
@@ -2478,7 +2478,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
                       {[0, 1, 2].map((dot) => (
                         <span
                           key={`widget-dot-${dot}`}
-                          className="h-2 w-2 rounded-none bg-blue-400/70 animate-bounce"
+                          className="h-2 w-2 rounded-full bg-blue-400/70 animate-bounce"
                           style={{ animationDelay: `${dot * 0.15}s` }}
                           aria-hidden="true"
                         ></span>
@@ -2489,7 +2489,7 @@ export default function ErnestWidget({ onReminder, webhookUrl, locale = "fr-FR" 
               </div>
             )}
             {error && (
-              <div className="mr-auto rounded-none bg-red-50 px-4 md:px-5 py-3 md:py-3.5 text-red-800 text-[16px] md:text-[18px] ring-1 ring-inset ring-red-200">
+              <div className="mr-auto rounded-2xl bg-red-50 px-4 md:px-5 py-3 md:py-3.5 text-red-800 text-[16px] md:text-[18px] ring-1 ring-inset ring-red-200">
                 {error} <button onClick={clearError} className="ml-2 underline">OK</button>
               </div>
             )}
